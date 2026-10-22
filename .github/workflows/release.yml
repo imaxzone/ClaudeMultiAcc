@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # GitHub-hosted image with Xcode 27 on macOS 27, Apple Silicon only (changelog 2026-10-15).
+    runs-on: xcode-27
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0 # CFBundleVersion is the commit count
+          persist-credentials: false # `gh release` below uses GH_TOKEN, not git credentials
+
+      - name: Toolchain (Swift 6.4 or newer)
+        run: .github/scripts/require-swift.sh 6.4
+
+      - name: Test
+        run: swift test
+
+      - name: Build, sign ad hoc, package
+        # Fails unless the tag is v<VERSION>: the in-app update check compares the tag with CFBundleShortVersionString.
+        run: scripts/release.sh --sign - --tag "$GITHUB_REF_NAME"
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          dist/*.zip dist/*.dmg dist/*.sha256
+          --verify-tag --generate-notes --title "ClaudeMultiAcc ${GITHUB_REF_NAME#v}"

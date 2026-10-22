@@ -1,0 +1,18 @@
+/* ClaudeMultiAcc, модуль Support: русский. Ключи — те же, что в en.lproj. */
+
+/* Окно «Добавить» / «Изменить…»: проверки полей (InstanceDraftProblem) */
+"draft.empty-name" = "Введите название";
+"draft.name-too-long" = "Не длиннее %1$ld знаков, сейчас %2$ld";
+"draft.name-control" = "В названии есть невидимые служебные символы — уберите их";
+"draft.name-not-file-name" = "Название не может содержать «/» или «:» и начинаться с точки";
+"draft.name-taken" = "«%@» уже есть — выберите другое название";
+"draft.empty-badge" = "Введите надпись — хотя бы один знак";
+"draft.badge-too-long" = "Не больше %1$ld знаков, сейчас %2$ld";
+"draft.badge-control" = "В надписи есть невидимые служебные символы — уберите их";
+
+/* Правка списка (InstanceEditProblem, InstanceEditError) */
+"registry.name-too-long" = "Название не длиннее 40 символов, сейчас %ld";
+"registry.bad-badge" = "Метка — от 1 до 6 символов";
+"registry.bad-email" = "Неверный адрес: %@";
+"registry.not-found" = "Экземпляра «%@» нет в списке";
+"registry.official" = "Официальное приложение нельзя убрать из списка";

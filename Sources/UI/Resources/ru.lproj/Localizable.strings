@@ -1,0 +1,187 @@
+/* ClaudeMultiAcc, модуль UI: русский. Ключи — те же, что в en.lproj.
+   Множественное число — в Localizable.stringsdict. Названия — в «ёлочках». */
+
+/* Общее */
+"common.quoted" = "«%@»";
+"common.cancel" = "Отмена";
+
+/* Значок в строке меню: подпись VoiceOver и подсказка (AppMenuStrings) */
+"status.update-available" = "есть версия %1$@ %2$@";
+"status.updating" = "идёт обновление";
+"status.deleting.one" = "удаляется %@";
+"status.deleting.many" = "удаляются %@";
+"status.release" = "новая версия ClaudeMultiAcc %@";
+
+/* Полоса обновления */
+"banner.title" = "Есть версия %@";
+"banner.subtitle" = "для %@";
+"banner.update" = "Обновить";
+"banner.update-count" = "Обновить %ld";
+"banner.updating" = "Обновляется…";
+
+/* Плитки и их действия */
+"tile.update-label" = "%1$@, есть обновление до %2$@";
+"tile.hint" = "Показывает действия";
+"tile.deleting" = "%@, удаляется";
+"tile.add" = "Добавить";
+"tile.add-label" = "Добавить приложение";
+"action.open" = "Открыть";
+"action.update-to" = "Обновить до %@";
+"action.edit" = "Изменить…";
+"action.reinstall" = "Переустановить…";
+"action.show-in-finder" = "Показать в Finder";
+"action.delete" = "Удалить «%@»…";
+
+/* Строки под сеткой */
+"row.launch-at-login" = "Открывать при старте системы";
+"row.switch-on" = "включено";
+"row.switch-off" = "выключено";
+"row.quit" = "Выйти";
+"release.title" = "Доступна новая версия ClaudeMultiAcc %@";
+"release.download" = "Скачать";
+"release.download-hint" = "Скачать на GitHub";
+
+/* Главное меню (на экране не видно: даёт окнам сочетания клавиш) */
+"mainmenu.quit" = "Выйти ClaudeMultiAcc";
+"mainmenu.edit" = "Правка";
+"mainmenu.undo" = "Отменить";
+"mainmenu.redo" = "Повторить";
+"mainmenu.cut" = "Вырезать";
+"mainmenu.copy" = "Скопировать";
+"mainmenu.paste" = "Вставить";
+"mainmenu.select-all" = "Выбрать все";
+"mainmenu.window" = "Окно";
+"mainmenu.close" = "Закрыть";
+
+/* Переключатель «Открывать при старте системы» (LaunchAtLoginText) */
+"login.needs-approval" = "Разрешите в Системных настройках";
+"login.legacy-agent" = "Сейчас через LaunchAgent — нажмите, чтобы перейти";
+"login.unavailable" = "Доступно после установки в Программы";
+"login.turn-on-failed" = "Не удалось включить";
+"login.turn-off-failed" = "Не удалось выключить";
+"login.legacy-trash-failed" = "Не удалось убрать старый LaunchAgent: %@";
+
+/* Перезапуск и обновление (UpdateFlowText) */
+"update.restart" = "Перезапустить";
+"update.dont-ask" = "Больше не спрашивать";
+"update.report-title" = "Обновление прошло не полностью";
+"update.busy" = "Сейчас идёт другое обновление или правка приложений — повторите через пару минут";
+"update.registry-unreadable" = "Не удалось прочитать список приложений (instances.json) — ничего не закрыто";
+"update.confirm-title.one" = "Перезапустить «%@» и обновить?";
+"update.confirm-text.one" = "Приложение закроется, встанет новая версия, затем оно откроется снова. Несохранённый текст в нём может пропасть.";
+"update.confirm-text.many" = "%@ закроются, встанет новая версия, затем они откроются снова. Несохранённый текст в них может пропасть.";
+"update.signing-failed" = "Не удалось подготовить подпись для сборки: %@";
+"update.pass-failed" = "Не удалось начать обновление — %@";
+"update.problem.build-failed" = "«%1$@»: не удалось собрать новую версию — %2$@";
+"update.problem.needs-identity" = "«%@»: нет постоянной подписи для сборки";
+"update.problem.retry" = "«%@»: официальный Claude сейчас обновляется — новая версия соберётся через несколько минут";
+"update.problem.auto-rebuild-off" = "«%@»: автосборка новых версий выключена (updates.autoRebuild в settings.json)";
+
+/* Перемещение в «Программы» (MoveToApplicationsText) */
+"move.title" = "Переместить ClaudeMultiAcc в «Программы»?";
+"move.text" = "Из «Программ» он сможет собирать копии Claude и открываться при старте системы. Исходная копия уйдёт в Корзину.";
+"move.move" = "Переместить";
+"move.not-now" = "Не сейчас";
+"move.failed" = "Не удалось переместить ClaudeMultiAcc";
+
+/* Удаление (DeleteDialogText) */
+"delete.delete" = "Удалить";
+"delete.ok" = "ОК";
+"delete.refused-title" = "Это приложение удалить нельзя";
+"delete.title" = "Удалить «%@»?";
+"delete.lead" = "Если приложение открыто, оно закроется. Всё удалённое попадёт в Корзину — до её очистки можно вернуть.";
+"delete.place.applications" = "из папки «Программы»";
+"delete.place.folder" = "из папки %@";
+"delete.app-only.label" = "Только приложение";
+"delete.app-only.removes" = "Удалится: %1$@ %2$@";
+"delete.app-only.old-copies" = " и его старые версии, сохранённые при обновлениях";
+"delete.app-only.keeps" = "Останется: вход в аккаунт, настройки и кэш этого приложения%1$@%2$@";
+"delete.app-only.size" = " (%@)";
+"delete.app-only.reuse" = ". Если снова добавить приложение с тем же названием, оно откроется уже с вашим входом";
+"delete.everything.label" = "Всё";
+"delete.everything.removes" = "Удалится: приложение, вход в аккаунт, настройки, кэш и локальные файлы этого приложения на Mac";
+"delete.everything.keeps" = "Останется: ваши чаты и проекты — они хранятся в аккаунте на claude.ai";
+"delete.everything.folder" = "Папка: %@";
+"delete.footer" = "Основной Claude и другие приложения это не затронет.";
+"delete.problem.nothing" = "Не удалось удалить «%@»";
+"delete.problem.partial" = "«%@» удалён не полностью";
+
+/* Шаги сборки (BuildSummary) */
+"step.preflight" = "Предварительная проверка";
+"step.probe" = "Проверка официального приложения";
+"step.copy" = "Копирование приложения";
+"step.patch-plist" = "Имя и идентификатор";
+"step.clean" = "Очистка атрибутов";
+"step.snapshot-source" = "Снимок источника";
+"step.recheck-source" = "Повторная проверка источника";
+"step.launcher" = "Лаунчер профиля";
+"step.badge" = "Метка на иконке";
+"step.entitlements" = "Права приложения";
+"step.sign" = "Подпись";
+"step.requirement" = "Требование подписи";
+"step.verify" = "Проверка подписи";
+"step.smoke" = "Проверочный запуск";
+
+/* Окно «Добавить» / «Изменить…» (InstanceEditorText) */
+"editor.title.add" = "Новое приложение";
+"editor.title.edit" = "Изменить «%@»";
+"editor.title.edit-plain" = "Изменить";
+"editor.submit.create" = "Создать";
+"editor.submit.save" = "Сохранить";
+"editor.submit.reinstall" = "Переустановить";
+"editor.button.done" = "Готово";
+"editor.button.close" = "Закрыть";
+"editor.field.name" = "Название";
+"editor.field.name-prompt" = "Claude Работа";
+"editor.field.name-hint" = "Так приложение называется в Доке и в Finder";
+"editor.field.badge" = "Надпись на иконке";
+"editor.field.badge-prompt" = "Раб";
+"editor.field.badge-hint" = "До 4 знаков. Иконка слева меняется сразу";
+"editor.preview.untitled" = "Без названия";
+"editor.preview.icon" = "Иконка «%@»";
+"editor.preview.icon-label" = "Иконка «%1$@» с надписью %2$@";
+"editor.leftover.title" = "На этом Mac остался вход от прошлого «%@»";
+"editor.leftover.question" = "Что сделать с прежним входом";
+"editor.leftover.sign-in" = "Войти как раньше — аккаунт и настройки останутся";
+"editor.leftover.start-fresh" = "Начать с чистого — прежний вход уйдёт в Корзину";
+"editor.note.add" = "Сборка занимает 1–3 минуты, потом приложение откроется — войдите в нём в аккаунт.";
+"editor.note.add-signed-in" = "Сборка занимает 1–3 минуты, потом приложение откроется уже со входом в аккаунт.";
+"editor.note.closing" = "%@ закроется на пару секунд, чтобы применить изменения, и откроется снова.";
+"editor.note.rebuild" = "Приложение пересоберётся с новым названием и надписью.";
+"editor.note.signed-in" = "Вход в аккаунт сохранится.";
+"editor.note.dock" = "Если оно закреплено в Доке, после сохранения закрепите его заново.";
+"editor.note.reinstall" = "Соберёт «%@» заново из текущего Claude — с новой иконкой.";
+"editor.progress.signing" = "Проверяю подпись для сборки…";
+"editor.progress.building" = "Собираю «%@»… обычно 1–3 минуты";
+"editor.progress.rebuilding" = "Пересобираю «%@»… обычно 1–3 минуты";
+"editor.progress.reinstalling" = "Переустанавливаю «%@»… обычно 1–3 минуты";
+"editor.progress.confirming" = "Сборка проверена — подтвердите установку";
+"editor.progress.installing" = "Устанавливаю…";
+"editor.progress.opening" = "Открываю «%@»…";
+"editor.progress.closing" = "Закрываю «%@»…";
+"editor.progress.reopening" = "Открываю «%@» снова…";
+"editor.failure.create" = "Не удалось создать";
+"editor.failure.save" = "Не удалось сохранить";
+"editor.failure.reinstall" = "Не удалось переустановить";
+"editor.no-signing" = "Нет подписи для сборки приложений, и создать её не получилось — подробности в журнале ClaudeMultiAcc";
+"editor.load-failed" = "Не удалось прочитать список приложений (instances.json) — проверить название нельзя";
+"editor.not-verified-at" = "Сборка не прошла проверку на шаге «%@» — ничего не изменено";
+"editor.leftover-trash-failed" = "Не удалось убрать прежний вход в Корзину — ничего не установлено";
+"editor.done.created" = "«%@» готово";
+"editor.done.saved" = "Сохранено";
+"editor.done.reinstalled" = "Переустановлено";
+"editor.done.reopened" = "«%@» снова открыто.";
+"editor.dock.refresh" = "Обновить Док";
+"editor.dock.refreshed" = "Док обновлён";
+"editor.dock.note" = "Док покажет новую иконку после перезапуска — это секунда, окна не закрываются";
+"editor.dock.failed" = "Не удалось перезапустить Док — попробуйте ещё раз";
+"editor.created.opened-signed-in" = "Оно открывается с прежним входом в аккаунт.";
+"editor.created.opened" = "Оно открывается — войдите в аккаунт в новом окне.";
+"editor.created.signed-in" = "Откройте его из «Программ» — вход в аккаунт прежний.";
+"editor.created" = "Откройте его из «Программ» и войдите в аккаунт.";
+"install.title" = "Установить «%@»?";
+"install.text" = "Сборка проверена. Приложение появится в «Программах» и сразу откроется.\nПри первом запуске macOS спросит пароль для «Claude Safe Storage» — выберите «Всегда разрешать».";
+"install.install" = "Установить";
+
+/* Снимки для ревью (AppMenuDemo): придуманное имя аккаунта */
+"demo.fivex" = "Claude 5x акк";

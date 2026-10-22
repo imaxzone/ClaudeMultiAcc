@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    # GitHub-hosted image with Xcode 27 on macOS 27, Apple Silicon only (changelog 2026-10-15).
+    runs-on: xcode-27
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Toolchain (Swift 6.4 or newer)
+        run: .github/scripts/require-swift.sh 6.4
+
+      - name: Build
+        run: swift build
+
+      - name: Test
+        run: swift test

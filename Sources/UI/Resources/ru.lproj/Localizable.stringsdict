@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>update.confirm-title.many</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@apps@</string>
+		<key>apps</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>Перезапустить и обновить %ld приложение?</string>
+			<key>few</key>
+			<string>Перезапустить и обновить %ld приложения?</string>
+			<key>many</key>
+			<string>Перезапустить и обновить %ld приложений?</string>
+			<key>other</key>
+			<string>Перезапустить и обновить %ld приложения?</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,18 @@
+/* ClaudeMultiAcc, module Support: English (development language). Keep the keys in step with ru.lproj. */
+
+/* Add / Edit window: field checks (InstanceDraftProblem) */
+"draft.empty-name" = "Enter a name";
+"draft.name-too-long" = "No longer than %1$ld characters, now %2$ld";
+"draft.name-control" = "The name has invisible control characters — remove them";
+"draft.name-not-file-name" = "The name cannot contain “/” or “:” or start with a dot";
+"draft.name-taken" = "“%@” already exists — choose another name";
+"draft.empty-badge" = "Enter a label — at least one character";
+"draft.badge-too-long" = "No more than %1$ld characters, now %2$ld";
+"draft.badge-control" = "The label has invisible control characters — remove them";
+
+/* Registry edits (InstanceEditProblem, InstanceEditError) */
+"registry.name-too-long" = "The name can be at most 40 characters, now %ld";
+"registry.bad-badge" = "The label must be 1 to 6 characters";
+"registry.bad-email" = "Invalid address: %@";
+"registry.not-found" = "There is no instance “%@” in the list";
+"registry.official" = "The official app cannot be removed from the list";

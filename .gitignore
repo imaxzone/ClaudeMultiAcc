@@ -1,0 +1,7 @@
+.build/
+.superpowers/
+*.xcodeproj
+.DS_Store
+/dist/
+*.profraw
+.claude/

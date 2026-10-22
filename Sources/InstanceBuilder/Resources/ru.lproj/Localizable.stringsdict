@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>rebuild.preflight-failed</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@checks@</string>
+		<key>checks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>Не пройдено проверок: %ld</string>
+			<key>few</key>
+			<string>Не пройдено проверок: %ld</string>
+			<key>many</key>
+			<string>Не пройдено проверок: %ld</string>
+			<key>other</key>
+			<string>Не пройдено проверок: %ld</string>
+		</dict>
+	</dict>
+	<key>remove.still-running</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>«%1$@» не закрылся за %2$#@seconds@. Закройте его и попробуйте снова — ничего не удалено.</string>
+		<key>seconds</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%2$ld секунду</string>
+			<key>few</key>
+			<string>%2$ld секунды</string>
+			<key>many</key>
+			<string>%2$ld секунд</string>
+			<key>other</key>
+			<string>%2$ld секунды</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

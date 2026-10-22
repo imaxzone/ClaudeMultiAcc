@@ -1,0 +1,187 @@
+/* ClaudeMultiAcc, module UI: English (development language). Keep the keys in step with ru.lproj.
+   Plurals are in Localizable.stringsdict. Names are quoted “like this”. */
+
+/* Common */
+"common.quoted" = "“%@”";
+"common.cancel" = "Cancel";
+
+/* Status item: VoiceOver label and tooltip (AppMenuStrings) */
+"status.update-available" = "a new version %1$@ is available %2$@";
+"status.updating" = "updating";
+"status.deleting.one" = "deleting %@";
+"status.deleting.many" = "deleting %@";
+"status.release" = "new version of ClaudeMultiAcc %@";
+
+/* Update banner */
+"banner.title" = "New version %@";
+"banner.subtitle" = "for %@";
+"banner.update" = "Update";
+"banner.update-count" = "Update %ld";
+"banner.updating" = "Updating…";
+
+/* Tiles and their actions */
+"tile.update-label" = "%1$@, update to %2$@ available";
+"tile.hint" = "Shows actions";
+"tile.deleting" = "%@, deleting";
+"tile.add" = "Add";
+"tile.add-label" = "Add App";
+"action.open" = "Open";
+"action.update-to" = "Update to %@";
+"action.edit" = "Edit…";
+"action.reinstall" = "Reinstall…";
+"action.show-in-finder" = "Show in Finder";
+"action.delete" = "Delete “%@”…";
+
+/* Rows under the grid */
+"row.launch-at-login" = "Open at Login";
+"row.switch-on" = "on";
+"row.switch-off" = "off";
+"row.quit" = "Quit";
+"release.title" = "ClaudeMultiAcc %@ is available";
+"release.download" = "Download";
+"release.download-hint" = "Download from GitHub";
+
+/* Main menu (never on screen: it carries the key equivalents of the windows) */
+"mainmenu.quit" = "Quit ClaudeMultiAcc";
+"mainmenu.edit" = "Edit";
+"mainmenu.undo" = "Undo";
+"mainmenu.redo" = "Redo";
+"mainmenu.cut" = "Cut";
+"mainmenu.copy" = "Copy";
+"mainmenu.paste" = "Paste";
+"mainmenu.select-all" = "Select All";
+"mainmenu.window" = "Window";
+"mainmenu.close" = "Close";
+
+/* Open at Login switch (LaunchAtLoginText) */
+"login.needs-approval" = "Allow in System Settings";
+"login.legacy-agent" = "Currently via a LaunchAgent — click to switch";
+"login.unavailable" = "Available once installed in Applications";
+"login.turn-on-failed" = "Could not turn on";
+"login.turn-off-failed" = "Could not turn off";
+"login.legacy-trash-failed" = "Could not remove the old LaunchAgent: %@";
+
+/* Restart and update (UpdateFlowText) */
+"update.restart" = "Restart";
+"update.dont-ask" = "Don’t ask again";
+"update.report-title" = "The update did not complete";
+"update.busy" = "Another update or app edit is in progress — try again in a couple of minutes";
+"update.registry-unreadable" = "Could not read the list of apps (instances.json) — nothing was quit";
+"update.confirm-title.one" = "Restart “%@” and update?";
+"update.confirm-text.one" = "The app will quit, get the new version and open again. Unsaved text in it may be lost.";
+"update.confirm-text.many" = "%@ will quit, get the new version and open again. Unsaved text in them may be lost.";
+"update.signing-failed" = "Could not prepare signing for the build: %@";
+"update.pass-failed" = "Could not start the update — %@";
+"update.problem.build-failed" = "“%1$@”: could not build the new version — %2$@";
+"update.problem.needs-identity" = "“%@”: no permanent signing certificate for the build";
+"update.problem.retry" = "“%@”: the official Claude is updating right now — the new version will be built in a few minutes";
+"update.problem.auto-rebuild-off" = "“%@”: automatic rebuilds are turned off (updates.autoRebuild in settings.json)";
+
+/* Move to Applications (MoveToApplicationsText) */
+"move.title" = "Move ClaudeMultiAcc to Applications?";
+"move.text" = "From Applications it can build Claude clones and open at login. The original copy goes to the Trash.";
+"move.move" = "Move";
+"move.not-now" = "Not Now";
+"move.failed" = "Could not move ClaudeMultiAcc";
+
+/* Delete (DeleteDialogText) */
+"delete.delete" = "Delete";
+"delete.ok" = "OK";
+"delete.refused-title" = "This app cannot be deleted";
+"delete.title" = "Delete “%@”?";
+"delete.lead" = "If the app is open, it will quit. Everything removed goes to the Trash — you can put it back until the Trash is emptied.";
+"delete.place.applications" = "from the Applications folder";
+"delete.place.folder" = "from %@";
+"delete.app-only.label" = "App only";
+"delete.app-only.removes" = "Removes: %1$@ %2$@";
+"delete.app-only.old-copies" = " and its old versions kept by updates";
+"delete.app-only.keeps" = "Keeps: this app’s sign-in, settings and cache%1$@%2$@";
+"delete.app-only.size" = " (%@)";
+"delete.app-only.reuse" = ". If you add an app with the same name again, it opens already signed in";
+"delete.everything.label" = "Everything";
+"delete.everything.removes" = "Removes: the app and its sign-in, settings, cache and local files on this Mac";
+"delete.everything.keeps" = "Keeps: your chats and projects — they live in your account on claude.ai";
+"delete.everything.folder" = "Folder: %@";
+"delete.footer" = "The main Claude and your other apps are not affected.";
+"delete.problem.nothing" = "Could not delete “%@”";
+"delete.problem.partial" = "“%@” was not fully deleted";
+
+/* Build steps (BuildSummary) */
+"step.preflight" = "Preflight check";
+"step.probe" = "Checking the official app";
+"step.copy" = "Copying the app";
+"step.patch-plist" = "Name and identifier";
+"step.clean" = "Clearing attributes";
+"step.snapshot-source" = "Source snapshot";
+"step.recheck-source" = "Source recheck";
+"step.launcher" = "Profile launcher";
+"step.badge" = "Icon label";
+"step.entitlements" = "App entitlements";
+"step.sign" = "Signing";
+"step.requirement" = "Signing requirement";
+"step.verify" = "Signature check";
+"step.smoke" = "Test launch";
+
+/* Add / Edit… window (InstanceEditorText) */
+"editor.title.add" = "New App";
+"editor.title.edit" = "Edit “%@”";
+"editor.title.edit-plain" = "Edit";
+"editor.submit.create" = "Create";
+"editor.submit.save" = "Save";
+"editor.submit.reinstall" = "Reinstall";
+"editor.button.done" = "Done";
+"editor.button.close" = "Close";
+"editor.field.name" = "Name";
+"editor.field.name-prompt" = "Claude Work";
+"editor.field.name-hint" = "How the app is named in the Dock and Finder";
+"editor.field.badge" = "Icon label";
+"editor.field.badge-prompt" = "Work";
+"editor.field.badge-hint" = "Up to 4 characters. The icon on the left updates as you type";
+"editor.preview.untitled" = "Untitled";
+"editor.preview.icon" = "Icon of “%@”";
+"editor.preview.icon-label" = "Icon of “%1$@” with the label %2$@";
+"editor.leftover.title" = "This Mac still has the sign-in of the earlier “%@”";
+"editor.leftover.question" = "What to do with the old sign-in";
+"editor.leftover.sign-in" = "Sign in as before — the account and settings stay";
+"editor.leftover.start-fresh" = "Start fresh — the old sign-in goes to the Trash";
+"editor.note.add" = "Building takes 1–3 minutes, then the app opens — sign in to your account there.";
+"editor.note.add-signed-in" = "Building takes 1–3 minutes, then the app opens already signed in.";
+"editor.note.closing" = "%@ will close for a few seconds to apply the changes and open again.";
+"editor.note.rebuild" = "The app will be rebuilt with the new name and label.";
+"editor.note.signed-in" = "You stay signed in.";
+"editor.note.dock" = "If it is pinned in the Dock, pin it again after saving.";
+"editor.note.reinstall" = "Rebuilds “%@” from the current Claude, with a fresh icon.";
+"editor.progress.signing" = "Checking the signing certificate…";
+"editor.progress.building" = "Building “%@”… usually 1–3 minutes";
+"editor.progress.rebuilding" = "Rebuilding “%@”… usually 1–3 minutes";
+"editor.progress.reinstalling" = "Reinstalling “%@”… usually 1–3 minutes";
+"editor.progress.confirming" = "Build verified — confirm the install";
+"editor.progress.installing" = "Installing…";
+"editor.progress.opening" = "Opening “%@”…";
+"editor.progress.closing" = "Closing “%@”…";
+"editor.progress.reopening" = "Reopening “%@”…";
+"editor.failure.create" = "Could not create";
+"editor.failure.save" = "Could not save";
+"editor.failure.reinstall" = "Could not reinstall";
+"editor.no-signing" = "There is no signing certificate for building apps, and creating one failed — see the ClaudeMultiAcc log for details";
+"editor.load-failed" = "Could not read the list of apps (instances.json) — the name cannot be checked";
+"editor.not-verified-at" = "The build failed the check at the “%@” step — nothing was changed";
+"editor.leftover-trash-failed" = "Could not move the old sign-in to the Trash — nothing was installed";
+"editor.done.created" = "“%@” is ready";
+"editor.done.saved" = "Saved";
+"editor.done.reinstalled" = "Reinstalled";
+"editor.done.reopened" = "“%@” is open again.";
+"editor.dock.refresh" = "Refresh Dock";
+"editor.dock.refreshed" = "Dock refreshed";
+"editor.dock.note" = "The Dock shows the new icon after a restart — takes a second, no windows close";
+"editor.dock.failed" = "Could not restart the Dock — try again";
+"editor.created.opened-signed-in" = "It is opening, signed in as before.";
+"editor.created.opened" = "It is opening — sign in to your account in the new window.";
+"editor.created.signed-in" = "Open it from Applications — you are signed in as before.";
+"editor.created" = "Open it from Applications and sign in to your account.";
+"install.title" = "Install “%@”?";
+"install.text" = "The build is verified. The app will appear in Applications and open right away.\nOn first launch macOS asks for the “Claude Safe Storage” password — choose Always Allow.";
+"install.install" = "Install";
+
+/* Review shots (AppMenuDemo): an invented account name */
+"demo.fivex" = "Claude 5x acct";

@@ -1,0 +1,131 @@
+/* ClaudeMultiAcc, module InstanceBuilder: English (development language). Keep the keys in step with ru.lproj. */
+
+/* Shared */
+"error.unexpected" = "Unexpected error — see the ClaudeMultiAcc log for details";
+"signing.user-hint" = "No permanent signing certificate — ClaudeMultiAcc creates one itself on the first “+ Add” and checks it before every build; try again, and if it still fails, see the log for details";
+"store.unreadable" = "Could not read the list of apps (instances.json)";
+"build.different-volumes" = "The build and Applications are on different disks";
+
+/* Installing a new app (InstallError) */
+"install.not-verified" = "The build failed the check — it cannot be installed";
+"install.report-mismatch" = "The build report does not match what you entered — build again";
+"install.running" = "An app with this identifier is already running — quit it and try again";
+"install.launcher-config-missing" = "The build has no launcher settings — build again";
+"install.adhoc" = "An ad hoc build is only a test — it cannot be installed";
+"install.after-move" = "The “%@” step failed — the build went back to the builds folder, the list is unchanged";
+"install.compensation-failed" = "The install did not finish, and the build could not be put back — it is in %@";
+
+/* Building (BuilderError) */
+"builder.invalid-instance" = "Invalid instance data — check the name and the short name";
+"builder.invalid-plist" = "Could not read the Info.plist of the official Claude";
+"builder.forbidden-entitlement" = "The official Claude has entitlements that are not allowed — the build was stopped";
+"builder.target-running" = "The instance is running — quit it and try again";
+"builder.vendor-updating" = "The official Claude is updating right now — try again in a minute";
+"builder.insufficient-space" = "Not enough disk space: %@ free";
+"builder.source-signature" = "The official Claude in Applications failed the Anthropic signature check";
+"builder.source-unreadable" = "Could not read the official Claude in Applications";
+"builder.source-changed" = "The official Claude changed while it was copied — build again";
+"builder.command-failed" = "The system command %@ failed";
+"builder.command-timed-out" = "The system command %@ did not respond in time";
+"builder.launcher-missing" = "The CloneLauncher launcher is missing — reinstall ClaudeMultiAcc";
+"builder.no-requirement" = "Could not read the build’s signing requirement";
+"builder.verification-failed" = "The build failed the signature check";
+"builder.smoke-failed" = "The build failed the test launch";
+"builder.build-dir" = "The build folder is taken or not allowed — delete the build and try again";
+
+/* Rebuilding the legacy Claude 2nd (RebuildError); the plural is in Localizable.stringsdict */
+"rebuild.not-verified" = "The build failed the check";
+"rebuild.target-running" = "Claude 2nd is running — nothing was replaced; quit it and run cmacc instance rebuild second --apply again";
+"rebuild.running-during-rollback" = "Claude 2nd is running — the rollback did not run; quit it and run cmacc instance rollback second %@ again";
+"rebuild.backup-invalid" = "This is not a backup made by a rebuild";
+"rebuild.after-swap" = "The app was replaced, but the “%1$@” step failed. Quit Claude 2nd, run cmacc instance rollback second %2$@, then cmacc instance rebuild second --apply";
+"rebuild.compensation-failed" = "Could not undo the step — the previous app is in %@; move it back to Applications by hand";
+"rebuild.after-rollback" = "The copy was restored, but the list of instances was not updated — see the log for details";
+
+/* Swapping the app in Applications (SwapError) */
+"swap.live-missing" = "The installed app was not found";
+"swap.staged-missing" = "The finished build was not found — build again";
+"swap.backup-exists" = "A backup with this name already exists — try again in a minute";
+"swap.live-changed" = "The app in Applications changed after the check — nothing was replaced";
+"swap.compensation-failed" = "Could not undo the step — the previous app is in %@; put it back by hand";
+
+/* New app checks (NewInstanceError) */
+"new.empty-name" = "Enter a name";
+"new.name-too-long" = "No longer than 40 characters, now %ld";
+"new.invalid-name" = "The name cannot contain “/” or “:” or start with a dot";
+"new.bad-slug" = "Only lowercase Latin letters, digits and “-”, up to 32 characters";
+"new.duplicate-slug" = "The instance “%@” already exists — choose another short name";
+"new.duplicate-bundle-id" = "The identifier %@ is already in use";
+"new.duplicate-app-path" = "The app %@ is already in the list";
+"new.duplicate-profile" = "This profile already belongs to another instance";
+"new.bad-badge" = "The label must be 1 to 6 characters";
+"new.bad-email" = "Invalid address: %@";
+"new.target-exists" = "%@ already exists in Applications";
+"new.store-corrupt" = "Could not read instances.json — the list was not checked";
+
+/* Edit… (EditInstanceError, EditInstance) */
+"edit.not-found" = "This app is no longer in the list";
+"edit.nothing-to-change" = "The name and label have not changed";
+"edit.target-exists" = "“%@” is already in Applications — choose another name";
+"edit.adhoc" = "No permanent signing certificate — the app cannot be changed";
+"edit.not-verified-at" = "The build failed the check at the “%@” step — nothing was changed";
+"edit.not-verified" = "The build failed the check — nothing was changed";
+"edit.busy" = "The apps are being updated — try again in a couple of minutes";
+"edit.still-running" = "“%@” did not quit — nothing was changed. Quit it and try again";
+"edit.install-failed" = "Could not install the new version — everything is back as it was";
+"edit.compensation-failed" = "Could not install the new version or put everything back — check %@";
+"edit.refused.official" = "The main Claude cannot be changed";
+"edit.refused.no-app" = "“%@” has no app — there is nothing to change";
+"edit.refused.legacy" = "“%@” was built the old way — it cannot be changed here";
+"edit.refused.incomplete" = "The entry of “%@” is missing data — it cannot be changed";
+"edit.retire-changed" = "The previous version of “%1$@” was not moved to the Trash: %2$@ changed after the check — check it by hand";
+"edit.retire-failed" = "Could not move the previous version of “%1$@” to the Trash — delete it by hand: %2$@";
+"edit.reopen-failed" = "Could not reopen “%@” — open it from Applications";
+
+/* Path policy (ClonePathRefusal) */
+"path.incomplete" = "The entry of “%@” is missing data — nothing was changed";
+"path.bundle-id" = "“%@”: the app identifier in the list does not belong to a Claude clone — nothing was changed";
+"path.app-location" = "“%1$@”: %2$@ is not an app directly in the Applications folder — nothing was changed";
+"path.protected-app" = "“%1$@”: %2$@ is the main Claude or ClaudeMultiAcc itself — nothing was changed";
+"path.not-a-bundle" = "“%1$@”: %2$@ is a link or a file, not an app — nothing was changed";
+"path.foreign-bundle" = "“%1$@”: %2$@ is another app, not this Claude clone — nothing was changed";
+"path.profile-location" = "“%1$@”: the profile folder %2$@ is not where ClaudeMultiAcc keeps profiles — nothing was changed";
+"path.profile-not-a-folder" = "“%1$@”: %2$@ is a link or a file, not a profile folder — nothing was changed";
+"path.shared" = "“%1$@”: %2$@ is also used by another app — nothing was changed";
+"path.changed" = "“%1$@”: %2$@ changed after the check — nothing was changed";
+
+/* Delete (RemovalError, InstanceRemover); the wait in seconds is in Localizable.stringsdict */
+"remove.not-found" = "The app “%@” is no longer in the list";
+"remove.official" = "The main Claude cannot be deleted";
+"remove.no-app" = "“%@” has no app — there is nothing to delete";
+"remove.incomplete" = "The entry of “%@” has no app path — it cannot be deleted from here";
+"remove.busy" = "The apps are being updated. Try deleting “%@” in a couple of minutes — nothing was deleted.";
+"remove.lock-failed" = "Could not start deleting “%@” (update.lock) — nothing was deleted.";
+"remove.changed" = "changed after the check";
+"remove.trash-failed" = "Could not move “%1$@” to the Trash: %2$@. Nothing was deleted.";
+"remove.trashed" = "Moved to the Trash: %@.";
+"remove.not-trashed" = "Not moved: %1$@ — %2$@";
+"remove.record-kept" = "“%@” is still in the ClaudeMultiAcc list: instances.json could not be saved. Try deleting again.";
+"remove.item.app" = "the app “%@”";
+"remove.item.backup" = "an old copy (%@)";
+"remove.item.staging" = "an update build (%@)";
+"remove.item.profile" = "sign-in, settings and cache (%@)";
+
+/* Restart and update (CloneRestarter) */
+"restart.failed" = "“%1$@”: could not update — %2$@";
+"restart.not-installed" = "“%1$@”: the update was not installed (%2$@)";
+"restart.store-unreadable" = "Could not read the list of instances (instances.json)";
+"restart.stuck" = "“%@” did not quit — the new version installs once it is closed";
+"restart.reopen-failed" = "“%@”: could not reopen";
+
+/* Move to Applications (TranslocationError) */
+"move.original-unknown" = "Could not find where ClaudeMultiAcc was opened from — drag it to Applications yourself and open it again";
+"move.foreign-app" = "Applications already has “%@”, but it is not ClaudeMultiAcc — remove it yourself and try again; nothing was moved";
+"move.newer-installed" = "Applications already has a newer ClaudeMultiAcc %1$@, but %2$@ is running — open the one in Applications; nothing was moved";
+
+/* Signing keychain (SigningKeychainError) and quarantine (QuarantineError) */
+"signing.recorded-missing" = "The permanent signing certificate from the login keychain was not found — restore it or remove builder.signingIdentitySHA1";
+"signing.unlock-failed" = "Could not open the ClaudeMultiAcc signing keychain";
+"signing.lock-unavailable" = "Another ClaudeMultiAcc process is creating the signing certificate — try again in a minute";
+"signing.create-failed" = "Could not create the signing certificate for Claude clones";
+"quarantine.remove-failed" = "Could not remove the macOS quarantine from the Claude clone’s files";
