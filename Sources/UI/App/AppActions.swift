@@ -13,18 +13,23 @@ final class AppActions: AppMenuActions {
   private let updates: UpdateFlow
   private let editor: InstanceEditorWindowController
   private let remove: @MainActor (String) -> Void
+  private let checkClaude: @MainActor () -> Void
   private let opener: any AppOpening
   private let log = AppLog.logger("app-actions")
 
-  /// - Parameter opener: launches an app or brings it to the front (default: `NSWorkspace`, as a Dock click).
+  /// - Parameters:
+  ///   - checkClaude: the menu's ↻, one manual Claude update check (the app shows an alert if it fails).
+  ///   - opener: launches an app or brings it to the front (default: `NSWorkspace`, as a Dock click).
   init(
     list: InstanceList, updates: UpdateFlow, editor: InstanceEditorWindowController,
-    remove: @escaping @MainActor (String) -> Void, opener: any AppOpening = ForegroundAppOpener()
+    remove: @escaping @MainActor (String) -> Void, checkClaude: @escaping @MainActor () -> Void = {},
+    opener: any AppOpening = ForegroundAppOpener()
   ) {
     self.list = list
     self.updates = updates
     self.editor = editor
     self.remove = remove
+    self.checkClaude = checkClaude
     self.opener = opener
   }
 
@@ -46,6 +51,7 @@ final class AppActions: AppMenuActions {
   }
 
   func openReleasePage(_ url: URL) { NSWorkspace.shared.open(url) }
+  func checkClaudeUpdates() { checkClaude() }
   func quit() { NSApp.terminate(nil) }
 
   /// Opens the app of `slug` in `instances`. No instance, no app path, or a launch that fails: logged, nothing shown.

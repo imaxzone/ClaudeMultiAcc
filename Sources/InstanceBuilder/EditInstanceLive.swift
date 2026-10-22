@@ -54,9 +54,9 @@ public struct WorkspaceTrash: EditInstance.Trashing {
 }
 
 extension EditInstance {
-  /// The real machine: the builder pipeline from `/Applications/Claude.app`, NSRunningApplication/lsappinfo/lock
-  /// checks, polite quit and NSWorkspace reopen (unless `quitter` / `opener` are given), `lsregister`, the Trash and
-  /// backups in `<data>/backup`.
+  /// The real machine: the builder pipeline from the newest Claude (`ClaudeSourceStore`),
+  /// NSRunningApplication/lsappinfo/lock checks, polite quit and NSWorkspace reopen (unless `quitter` / `opener` are
+  /// given), `lsregister`, the Trash and backups in `<data>/backup`.
   public static func live(
     paths: Paths, runner: ProcessRunning, launcherBinary: URL, quitter: (any AppQuitting)? = nil,
     opener: (any AppOpening)? = nil

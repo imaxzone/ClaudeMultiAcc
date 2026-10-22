@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- The front square of the menu-bar mark (StatusGlyph) with its spark knocked out. Glyph units ×36 around (9.35, 9.35) → this 1024 canvas; colour and glass come from icon.json. -->
+  <defs>
+    <mask id="spark" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <g stroke="#000" stroke-width="48.6" stroke-linecap="round">
+        <line x1="445.4" y1="578.6" x2="578.6" y2="578.6"/>
+        <line x1="445.4" y1="578.6" x2="514.13" y2="509.87"/>
+        <line x1="445.4" y1="578.6" x2="445.4" y2="445.4"/>
+        <line x1="445.4" y1="578.6" x2="376.67" y2="509.87"/>
+        <line x1="445.4" y1="578.6" x2="312.2" y2="578.6"/>
+        <line x1="445.4" y1="578.6" x2="376.67" y2="647.33"/>
+        <line x1="445.4" y1="578.6" x2="445.4" y2="711.8"/>
+        <line x1="445.4" y1="578.6" x2="514.13" y2="647.33"/>
+      </g>
+    </mask>
+  </defs>
+  <rect x="229.4" y="362.6" width="432" height="432" rx="122.4" fill="#fff" mask="url(#spark)"/>
+</svg>

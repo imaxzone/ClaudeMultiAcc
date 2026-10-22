@@ -4,7 +4,7 @@ import Support
 
 /// What «Сохранить» in the «Изменить…» window asks for: a new app name and icon label. The slug, bundle id and
 /// profile folder never change, so the account stays signed in. «Переустановить» is a change with `reinstall` set:
-/// the same name and label rebuilt from the current official app (a fresh icon, no Claude update needed).
+/// the same name and label rebuilt from the newest Claude (a fresh icon, no Claude update needed).
 public struct InstanceChange: Sendable, Equatable {
   public let slug: Slug
   public let name: String
@@ -45,10 +45,12 @@ public struct EditOutcome: Sendable, Equatable {
   }
 }
 
-/// Rebuilds a cmacc-built clone from the official app with a new name and/or label (or, for a reinstall, the same
-/// ones): staging build → verify → (quit the running clone) → swap in place, or move to `<Applications>/<new name>.app`
-/// → register → `instances.json` → LaunchServices forgets the previous bundle (the backup of a swap; the old bundle of
-/// a rename, which then goes to the Trash) → reopen. Until `instances.json` is written every step is undone on failure.
+/// Rebuilds a cmacc-built clone from the newest Claude (`ClaudeSourceStore.newest()`: the official app, or a verified
+/// download that is newer, so an edit never rolls an updated clone back) with a new name and/or label (or, for a
+/// reinstall, the same ones): staging build → verify → (quit the running clone) → swap in place, or move to
+/// `<Applications>/<new name>.app` → register → `instances.json` → LaunchServices forgets the previous bundle (the
+/// backup of a swap; the old bundle of a rename, which then goes to the Trash) → reopen. Until `instances.json` is
+/// written every step is undone on failure.
 /// Only an app `ClonePathPolicy` accepts is edited, and it is compared with what was checked before it is swapped,
 /// set aside or trashed.
 public struct EditInstance: Sendable {
@@ -219,9 +221,11 @@ public struct EditInstance: Sendable {
     return spec
   }
 
-  /// A verified staging build of the new spec; an unverified one is removed and nothing else happens.
+  /// A verified staging build of the new spec from the newest Claude (the official app's path when there is none, so
+  /// the pipeline refuses it as before); an unverified one is removed and nothing else happens.
   private func build(_ plan: EditPlan, identity: SigningIdentity) async throws -> URL {
-    let report = try await effects.builder.build(spec: plan.spec, source: officialApp, identity: identity, intent: .stagingOnly)
+    let source = ClaudeSourceStore(paths: paths, officialApp: officialApp).newest()?.app ?? officialApp
+    let report = try await effects.builder.build(spec: plan.spec, source: source, identity: identity, intent: .stagingOnly)
     let staged = URL(fileURLWithPath: report.stagedPath, isDirectory: true)
     guard report.verified else {
       discardBuild(staged)

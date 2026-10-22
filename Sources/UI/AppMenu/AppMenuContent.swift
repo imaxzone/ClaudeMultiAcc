@@ -54,7 +54,7 @@ public struct AppMenuContent: Equatable, Sendable {
     self.tiles = tiles
   }
 
-  /// A clone is behind: the status item shows its blue dot.
+  /// A clone is behind: the status item shows its red dot.
   public var hasUpdates: Bool { banner != nil }
 
   public static let empty = AppMenuContent(banner: nil, tiles: [])

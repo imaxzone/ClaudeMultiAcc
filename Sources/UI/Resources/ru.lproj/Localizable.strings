@@ -183,5 +183,27 @@
 "install.text" = "Сборка проверена. Приложение появится в «Программах» и сразу откроется.\nПри первом запуске macOS спросит пароль для «Claude Safe Storage» — выберите «Всегда разрешать».";
 "install.install" = "Установить";
 
+/* Проверка обновлений Claude: кнопка ↻ и строка в шапке меню, окно после неудачной ручной проверки (ClaudeUpdateText) */
+"claude.check" = "Проверить обновления Claude";
+"claude.idle" = "Claude %@";
+"claude.checking" = "Проверяю обновления Claude…";
+"claude.downloading" = "Скачиваю Claude %@ — %ld %%";
+"claude.verifying" = "Проверяю Claude %@…";
+"claude.up-to-date" = "Обновлений Claude нет — у вас %@";
+"claude.ready" = "Claude %@ скачан";
+"claude.failed" = "Не удалось обновить Claude";
+"claude.alert.title" = "Не удалось обновить Claude";
+"claude.alert.official-missing" = "Claude не найден в «Программах». Установите его с claude.ai/download и попробуйте снова.";
+"claude.alert.network" = "Нет связи с сервером обновлений Claude. Проверьте интернет и попробуйте позже.";
+"claude.alert.bad-answer" = "Сервер обновлений Claude ответил непонятно. Попробуйте позже.";
+"claude.alert.untrusted-url" = "Сервер предложил скачать Claude не с downloads.claude.ai — скачивание отменено.";
+"claude.alert.no-space" = "Мало места на диске: нужно %1$@, свободно %2$@.";
+"claude.alert.damaged" = "Скачанный файл повреждён. Попробуйте ещё раз.";
+"claude.alert.unpack-failed" = "Не удалось распаковать скачанный Claude.";
+"claude.alert.not-genuine" = "Скачанный Claude не прошёл проверку подписи Anthropic и не будет использован.";
+"claude.alert.version-mismatch" = "Скачан Claude %1$@ вместо %2$@ — он не будет использован.";
+"claude.alert.busy" = "Сейчас обновляются копии. Попробуйте через минуту.";
+"claude.alert.storage" = "Не удалось сохранить Claude в папке ClaudeMultiAcc.";
+
 /* Снимки для ревью (AppMenuDemo): придуманное имя аккаунта */
 "demo.fivex" = "Claude 5x акк";

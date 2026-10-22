@@ -183,5 +183,27 @@
 "install.text" = "The build is verified. The app will appear in Applications and open right away.\nOn first launch macOS asks for the “Claude Safe Storage” password — choose Always Allow.";
 "install.install" = "Install";
 
+/* Claude update check: the ↻ button and the line in the menu header, the alert after a failed manual check (ClaudeUpdateText) */
+"claude.check" = "Check for Claude updates";
+"claude.idle" = "Claude %@";
+"claude.checking" = "Checking for Claude updates…";
+"claude.downloading" = "Downloading Claude %@ — %ld%%";
+"claude.verifying" = "Verifying Claude %@…";
+"claude.up-to-date" = "No Claude updates — you have %@";
+"claude.ready" = "Claude %@ downloaded";
+"claude.failed" = "Couldn’t update Claude";
+"claude.alert.title" = "Couldn’t update Claude";
+"claude.alert.official-missing" = "Claude isn’t in the Applications folder. Install it from claude.ai/download and try again.";
+"claude.alert.network" = "Can’t reach the Claude update server. Check your internet connection and try again later.";
+"claude.alert.bad-answer" = "The Claude update server sent an answer that couldn’t be read. Try again later.";
+"claude.alert.untrusted-url" = "The server offered Claude from somewhere other than downloads.claude.ai — the download was cancelled.";
+"claude.alert.no-space" = "Not enough disk space: %1$@ needed, %2$@ free.";
+"claude.alert.damaged" = "The downloaded file is damaged. Try again.";
+"claude.alert.unpack-failed" = "Couldn’t unpack the downloaded Claude.";
+"claude.alert.not-genuine" = "The downloaded Claude failed the Anthropic signature check and won’t be used.";
+"claude.alert.version-mismatch" = "Downloaded Claude %1$@ instead of %2$@ — it won’t be used.";
+"claude.alert.busy" = "The apps are being updated right now. Try again in a minute.";
+"claude.alert.storage" = "Couldn’t save Claude in the ClaudeMultiAcc folder.";
+
 /* Review shots (AppMenuDemo): an invented account name */
 "demo.fivex" = "Claude 5x acct";

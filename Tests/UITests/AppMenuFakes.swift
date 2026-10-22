@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import InstanceBuilder
 import Support
 @testable import UI
 
@@ -38,7 +39,16 @@ final class RecordingMenuActions: AppMenuActions {
   func delete(slug: String) { calls.append("delete:\(slug)") }
   func add() { calls.append("add") }
   func openReleasePage(_ url: URL) { calls.append("release:\(url.absoluteString)") }
+  func checkClaudeUpdates() { calls.append("checkClaude") }
   func quit() { calls.append("quit") }
+}
+
+/// The Claude update check as the app reports it: its status and the newest Claude ClaudeMultiAcc builds from
+/// (nil: no download newer than the official app). The test changes both between reads.
+@MainActor
+final class FakeClaudeUpdate {
+  var status = ClaudeUpdateStatus.idle
+  var newest: String?
 }
 
 /// Installed versions by app path.
@@ -104,7 +114,10 @@ struct AppMenuFixture {
   let icons = FakeIcons()
   let presenter = FakeTileMenuPresenter()
   let busy = FakeBusy()
+  let claude = FakeClaudeUpdate()
   var release: AppReleaseInfo?
+  /// Installed versions by app path (the owner's list: 2nd and mv2 behind the official 3.1700.0).
+  var installed = AppMenuFixture.versions
 
   static let releaseURL = URL(string: "https://github.com/example/ClaudeMultiAcc/releases/tag/v1.4.0")!
 
@@ -121,8 +134,10 @@ struct AppMenuFixture {
     let instances = self.instances
     let release = self.release
     let busy = self.busy
+    let claude = self.claude
     return AppMenuController(
       instances: { instances }, login: login, actions: actions, releaseInfo: { release }, busy: { busy.state },
-      versions: Self.versions, icons: icons, presenter: presenter)
+      claudeUpdate: { claude.status }, newestClaude: { claude.newest }, versions: installed, icons: icons,
+      presenter: presenter)
   }
 }

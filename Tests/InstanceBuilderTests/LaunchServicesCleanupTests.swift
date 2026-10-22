@@ -3,8 +3,9 @@ import Support
 import Testing
 @testable import InstanceBuilder
 
-/// The start-up sweep and `Registrar.unregister`: LaunchServices forgets backups, staged builds and stale records under
-/// the data folder. No real `lsregister` runs: a scripted runner answers the dump and records every `-u`.
+/// The start-up sweep and `Registrar.unregister`: LaunchServices forgets backups, staged builds, downloaded Claude
+/// sources and stale records under the data folder. No real `lsregister` runs: a scripted runner answers the dump and
+/// records every `-u`.
 @Suite struct LaunchServicesCleanupTests {
   struct Fixture {
     let root: URL
@@ -129,7 +130,37 @@ import Testing
       "old/Gone.app",
       "staging/home-20260921-141320.noindex/Claude Home.app",
     ])
-    #expect(f.updatesLog.contains("launchservices sweep: unregistered 5 of 5 (backups 1, staged 0, database 4)"))
+    #expect(f.updatesLog.contains("launchservices sweep: unregistered 5 of 5 (backups 1, staged 0, sources 0, database 4)"))
+  }
+
+  /// Downloaded Claude versions stay out of LaunchServices like backups and staging: every `<version>.noindex/Claude.app`
+  /// on disk (no descent into the bundle, no symlink) and every database record under `<data>/source`.
+  @Test func sweepForgetsDownloadedSources() async throws {
+    let f = try fixture()
+    let sources = f.paths.claudeSourcesDir
+    let data = f.data.path
+    try makeBundle(sources.appendingPathComponent("3.1623.3.noindex/Claude.app/Contents/Frameworks/Claude Helper.app"))
+    try makeBundle(sources.appendingPathComponent("incoming.noindex/unpacked/Claude.app"))
+    let outside = f.root.appendingPathComponent("Applications/Claude.app")
+    try makeBundle(outside)
+    try FileManager.default.createSymbolicLink(at: sources.appendingPathComponent("3.1623.4.noindex"), withDestinationURL: outside)
+    let dump = [
+      record("\(data)/source/3.1623.3.noindex/Claude.app", 0x10),
+      record("\(data)/source/3.1623.3.noindex/Claude.app/Contents/Frameworks/Claude Helper.app", 0x20),
+      record("\(data)/source/incoming.noindex/unpacked/Claude.app", 0x30),
+      record("\(data)/source/3.1623.1.noindex/Claude.app", 0x40),
+      record(outside.path, 0x50),
+    ].joined(separator: "\n")
+    let runner = lsregister(dump: dump)
+    await LaunchServicesCleanup.sweep(paths: f.paths, runner: runner)
+    #expect(unregistered(runner, f) == [
+      "source/3.1623.3.noindex/Claude.app",
+      "source/3.1623.1.noindex/Claude.app",
+      "source/3.1623.3.noindex/Claude.app/Contents/Frameworks/Claude Helper.app",
+      "source/incoming.noindex/unpacked/Claude.app",
+    ])
+    #expect(f.updatesLog.contains("launchservices sweep: unregistered 4 of 4 (backups 0, staged 0, sources 1, database 3)"))
+    #expect(FileManager.default.fileExists(atPath: sources.appendingPathComponent("3.1623.3.noindex/Claude.app/Contents").path))
   }
 
   /// `lsregister -u` on a bundle LaunchServices never registered fails with -10814 ("failed to scan … -10814"): that
@@ -143,7 +174,7 @@ import Testing
     }
     await LaunchServicesCleanup.sweep(paths: f.paths, runner: runner)
     let log = f.updatesLog
-    #expect(log.contains("launchservices sweep: unregistered 0 of 1 (backups 1, staged 0, database 0); 1 not registered"))
+    #expect(log.contains("launchservices sweep: unregistered 0 of 1 (backups 1, staged 0, sources 0, database 0); 1 not registered"))
     #expect(!log.contains("failed"))
   }
 
@@ -154,7 +185,7 @@ import Testing
     await LaunchServicesCleanup.sweep(paths: f.paths, runner: runner)
     #expect(unregistered(runner, f) == ["backup/Claude Home.app.20260101-000000"])
     let log = f.updatesLog
-    #expect(log.contains("[updates] launchservices sweep: unregistered 0 of 1 (backups 1, staged 0, database 0)"))
+    #expect(log.contains("[updates] launchservices sweep: unregistered 0 of 1 (backups 1, staged 0, sources 0, database 0)"))
     #expect(log.contains("dump: lsregister exited 1"))
     #expect(log.contains("failed 1: Claude Home.app.20260101-000000"))
     #expect(log.split(separator: "\n").count == 1)

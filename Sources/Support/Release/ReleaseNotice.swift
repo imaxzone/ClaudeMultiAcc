@@ -47,7 +47,7 @@ public final class ReleaseNotice {
   }
 
   /// `CFBundleShortVersionString`, else `BuildInfo.version` (e.g. under `swift run`).
-  static func runningVersion(infoDictionary: [String: Any]?) -> String {
+  public static func runningVersion(infoDictionary: [String: Any]?) -> String {
     infoDictionary?["CFBundleShortVersionString"] as? String ?? BuildInfo.version
   }
 

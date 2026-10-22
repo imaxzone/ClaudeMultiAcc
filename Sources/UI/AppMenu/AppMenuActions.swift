@@ -1,8 +1,8 @@
 import AppKit
 import Foundation
 
-/// What the menu asks the app to do. The menu closes itself before calling any of these, so a window or alert
-/// opened by the app never appears under it.
+/// What the menu asks the app to do. The menu closes itself before calling any of these (except
+/// `checkClaudeUpdates`), so a window or alert opened by the app never appears under it.
 @MainActor
 public protocol AppMenuActions: AnyObject {
   /// «Открыть» in a tile's actions, and ⌥Return on a tile: launches the app or brings it to the front.
@@ -22,6 +22,9 @@ public protocol AppMenuActions: AnyObject {
   func add()
   /// «Скачать» in the «Доступна новая версия ClaudeMultiAcc …» row.
   func openReleasePage(_ url: URL)
+  /// The ↻ button in the header: one manual check for a newer Claude. The menu stays open and follows the check
+  /// through `AppMenuController.claudeUpdateChanged()`; the app shows an alert if it fails.
+  func checkClaudeUpdates()
   func quit()
 }
 

@@ -3,8 +3,8 @@ import Support
 import Testing
 @testable import InstanceBuilder
 
-/// «Переустановить»: the same clone rebuilt from the current official app in place (same name, label, slug, bundle
-/// id and profile), and the backup of every in-place swap forgotten by LaunchServices.
+/// «Переустановить»: the same clone rebuilt from the newest Claude in place (same name, label, slug, bundle id and
+/// profile), and the backup of every in-place swap forgotten by LaunchServices.
 @Suite(.russian) struct EditInstanceReinstallTests {
   private let workId = EditFixture.workId
   private let backupName = "Claude Work.app.20260921-141320"
@@ -24,6 +24,24 @@ import Testing
     let backup = f.paths.backupDir.appendingPathComponent(backupName)
     #expect(FileManager.default.fileExists(atPath: backup.appendingPathComponent("Contents/Info.plist.disabled").path))
     #expect(try f.stagedBuilds().isEmpty)
+  }
+
+  /// Edits and reinstalls build from the newest Claude: a download strictly newer than the official app, else the
+  /// official app (also when it is missing: the pipeline then refuses the build, as before downloads existed).
+  @Test func reinstallBuildsFromTheNewestSource() async throws {
+    func source(official: String?, download: String, _ name: String) async throws -> String? {
+      let f = try EditFixture(name)
+      if let official { try ClaudeSourceStoreTests.makeClaude(f.apps.appendingPathComponent("Claude.app"), version: official) }
+      try writeDownloadedSource(f.paths, version: download)
+      let sources = EventLog()
+      let builder = SourceRecordingBuilder(inner: FakeCloneBuilder(paths: f.paths, log: f.log), sources: sources)
+      _ = try await f.apply(f.engine(builder: builder), name: "Claude Work", badge: "W", reinstall: true)
+      #expect(f.marker("Claude Work.app") == "new")
+      return sources.all.first.map { String($0.dropFirst(f.root.path.count + 1)) }
+    }
+    #expect(try await source(official: "3.1623.0", download: "3.1623.3", "newer") == "data/source/3.1623.3.noindex/Claude.app")
+    #expect(try await source(official: "3.1623.3", download: "3.1623.3", "tie") == "Applications/Claude.app")
+    #expect(try await source(official: nil, download: "3.1623.3", "none") == "Applications/Claude.app")
   }
 
   /// The values are trimmed like any change; the flag only lifts the «nothing to change» refusal.

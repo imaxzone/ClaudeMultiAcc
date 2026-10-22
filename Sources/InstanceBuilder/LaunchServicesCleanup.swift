@@ -4,20 +4,24 @@ import Support
 
 /// LaunchServices hygiene for bundles that only live in the data folder. Every swap moves the previous bundle to
 /// `<data>/backup/`, and LaunchServices keeps it (and the helper apps inside it) registered, so a bundle id, a
-/// `claude://` link, Open With or Spotlight can resolve to that hidden copy; staged builds can be picked up the same way.
+/// `claude://` link, Open With or Spotlight can resolve to that hidden copy; staged builds and the Claude versions
+/// ClaudeMultiAcc downloaded (`<data>/source`) can be picked up the same way.
 public enum LaunchServicesCleanup {
   /// The bundle table of the read-only database dump (about half the size of the whole dump).
   static let dumpArguments = ["-dump", "Bundle"]
   /// How deep below the staging folder a staged `*.app` is looked for (`<slug>-<ts>.noindex/<name>.app` is 2).
   static let stagingDepth = 3
+  /// How deep below the downloaded-sources folder a `*.app` is looked for (`<version>.noindex/Claude.app` is 2).
+  static let sourcesDepth = 2
   private static let log = AppLog.logger("launchservices")
 
   /// `<logs>/updates.log`, where swaps and this cleanup report.
   static func updatesLog(_ paths: Paths) -> URL { paths.logsDir.appendingPathComponent("updates.log") }
 
   /// Once at app start: `lsregister -u` for every backup (and each app inside a `failed-<ts>/` folder), every staged
-  /// `*.app`, and every bundle the LaunchServices database still lists under the backup or staging folder (nested
-  /// helpers and deleted backups included) or anywhere else under the data folder while gone from disk. Idempotent and
+  /// `*.app`, every downloaded Claude, and every bundle the LaunchServices database still lists under the backup,
+  /// staging or source folder (nested helpers and deleted backups included) or anywhere else under the data folder
+  /// while gone from disk. Idempotent and
   /// quiet: never throws, deletes nothing, follows no symlink, touches nothing outside the data folder, and writes one
   /// summary line to updates.log.
   /// `lsregister -u` on a bundle LaunchServices does not know ("failed to scan …: -10814"): nothing to forget.
@@ -27,10 +31,11 @@ public enum LaunchServicesCleanup {
     let inside = { (url: URL) in isInside(url, paths.dataDir) }
     let backups = backupBundles(in: paths.backupDir).filter(inside)
     let staged = stagedBundles(in: paths.stagingDir, depth: stagingDepth).filter(inside)
+    let sources = stagedBundles(in: paths.claudeSourcesDir, depth: sourcesDepth).filter(inside)
     let dump = await databasePaths(runner: runner)
-    let onDisk = Set((backups + staged).map(\.path))
+    let onDisk = Set((backups + staged + sources).map(\.path))
     let database = staleRecords(dump.paths, paths: paths).filter { !onDisk.contains($0.path) }
-    let targets = backups + staged + database
+    let targets = backups + staged + sources + database
     let registrar = Registrar(runner: runner, staging: nil)
     var failures: [String] = []
     var notRegistered = 0
@@ -45,7 +50,7 @@ public enum LaunchServicesCleanup {
     }
     let done = targets.count - failures.count - notRegistered
     var line = "launchservices sweep: unregistered \(done) of \(targets.count) "
-      + "(backups \(backups.count), staged \(staged.count), database \(database.count))"
+      + "(backups \(backups.count), staged \(staged.count), sources \(sources.count), database \(database.count))"
     if notRegistered > 0 { line += "; \(notRegistered) not registered" }
     if let note = dump.note { line += "; dump: \(note)" }
     if let first = failures.first { line += "; failed \(failures.count): \(first)" }
@@ -89,12 +94,13 @@ public enum LaunchServicesCleanup {
     return (registeredPaths(inDump: result.stdout), note)
   }
 
-  /// Database records worth forgetting, sorted and unique: everything under the backup or staging folder, and anything
-  /// else under the data folder that is gone from disk (a dangling symlink still counts as present).
+  /// Database records worth forgetting, sorted and unique: everything under the backup, staging or source folder, and
+  /// anything else under the data folder that is gone from disk (a dangling symlink still counts as present).
   static func staleRecords(_ registered: [String], paths: Paths) -> [URL] {
     Set(registered).sorted().map { URL(fileURLWithPath: $0) }.filter { url in
       guard isInside(url, paths.dataDir) else { return false }
-      return isInside(url, paths.backupDir) || isInside(url, paths.stagingDir) || !exists(url)
+      return isInside(url, paths.backupDir) || isInside(url, paths.stagingDir) || isInside(url, paths.claudeSourcesDir)
+        || !exists(url)
     }
   }
 

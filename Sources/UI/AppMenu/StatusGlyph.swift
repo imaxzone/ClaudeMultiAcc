@@ -2,20 +2,30 @@ import AppKit
 
 /// The menu-bar glyph of ClaudeMultiAcc, drawn in code as a template image: a filled rounded square with a spark
 /// knocked out of it, in front of the outline of a second square — several Claudes. While a clone is behind (or an
-/// update runs), a round gap is cut at the top-right corner for the blue dot or the spinner (`StatusDotView`), which
+/// update runs), a round gap is cut at the top-right corner for the red dot or the spinner (`StatusDotView`), which
 /// is not part of the template.
 public enum StatusGlyph {
   public static let size = CGSize(width: 18, height: 18)
-  /// The blue dot, in glyph coordinates (origin bottom-left): its centre and diameter.
+  /// The red update dot, in glyph coordinates (origin bottom-left): its centre and the diameter of its red fill.
   public static let dotCenter = CGPoint(x: 15, y: 15)
   public static let dotDiameter: CGFloat = 6
-  /// The open ring that spins in the same place while an update runs: its outer diameter, line and sweep.
+  /// The white ring around the red fill, like a notification badge; it sets the dot apart on any menu bar.
+  public static let dotRingWidth: CGFloat = 1.25
+  public static var dotOuterDiameter: CGFloat { dotDiameter + 2 * dotRingWidth }
+  public static let dotFill = NSColor.systemRed
+  public static let dotRing = NSColor.white
+  /// The open ring that spins in the same place while an update runs: the outer diameter of its red line, the line,
+  /// the white outline on each side of it (like the dot's ring) and the sweep.
   public static let spinnerDiameter: CGFloat = 7
   public static let spinnerLineWidth: CGFloat = 1.5
+  public static let spinnerOutlineWidth: CGFloat = 1
   static let spinnerSweep: CGFloat = 0.75
-  /// The transparent ring around the dot.
-  static let cutoutDiameter: CGFloat = 9
+  /// The spinner with its outline.
+  public static var spinnerOuterDiameter: CGFloat { spinnerDiameter + 2 * spinnerOutlineWidth }
+  /// The transparent ring around the dot (and its white ring).
+  static let cutoutDiameter: CGFloat = 10
 
+  /// The mark's geometry; the app icon (`assets/AppIcon.icon`) draws the same shapes scaled by 36 around (9.35, 9.35).
   static let front = CGRect(x: 1.5, y: 1.5, width: 12, height: 12)
   static let back = CGRect(x: 5, y: 5, width: 11.5, height: 11.5)
   static let frontRadius: CGFloat = 3.4

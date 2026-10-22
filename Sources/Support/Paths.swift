@@ -33,6 +33,8 @@ public struct Paths: Sendable, Equatable {
   public var signingDir: URL { dataDir.appendingPathComponent("signing", isDirectory: true) }
   public var requirementFile: URL { signingDir.appendingPathComponent("requirement.txt") }
   public var identityFile: URL { signingDir.appendingPathComponent("identity.json") }
+  /// Claude versions ClaudeMultiAcc downloaded itself (`<version>.noindex/Claude.app`), see `ClaudeSourceStore`.
+  public var claudeSourcesDir: URL { dataDir.appendingPathComponent("source", isDirectory: true) }
 
   public var cliAccountsRoot: URL { home.appendingPathComponent(".claude-accounts", isDirectory: true) }
 

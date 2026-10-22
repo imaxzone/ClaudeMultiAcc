@@ -2,6 +2,8 @@ import AppKit
 
 /// Everything in the menu that can be highlighted and activated.
 public enum AppMenuItem: Hashable, Sendable {
+  /// The ↻ button in the header: checks for a newer Claude (the menu stays open).
+  case checkClaude
   case updateAll
   case tile(String)
   case add
@@ -39,9 +41,10 @@ public enum AppMenuKeyCommand: Equatable, Sendable {
   }
 }
 
-/// The order of the menu: banner button, the 3-column grid (tiles, then «Добавить»), the login switch, «Выйти», and
-/// the release line last. The banner button is left out while an update runs (it is disabled then); a clone being
-/// removed keeps its cell, so the grid keeps its shape.
+/// The order of the menu: the header's ↻, the banner button, the 3-column grid (tiles, then «Добавить»), the login
+/// switch, «Выйти», and the release line last. ↻ is always there (while a check runs, Return on it does nothing, so
+/// the keyboard stays where the owner left it); the banner button is left out while an update runs (it is disabled
+/// then); a clone being removed keeps its cell, so the grid keeps its shape.
 public struct AppMenuLayout: Equatable, Sendable {
   public static let columns = 3
 
@@ -52,7 +55,7 @@ public struct AppMenuLayout: Equatable, Sendable {
 
   public init(content: AppMenuContent, hasRelease: Bool, busy: AppMenuBusy = .idle) {
     grid = content.tiles.map { .tile($0.slug) } + [.add]
-    let head: [AppMenuItem] = content.banner == nil || busy.updating ? [] : [.updateAll]
+    let head: [AppMenuItem] = [.checkClaude] + (content.banner == nil || busy.updating ? [] : [.updateAll])
     let rows: [AppMenuItem] = [.login, .quit] + (hasRelease ? [.release] : [])
     linear = head + grid + rows
     gridStart = head.count

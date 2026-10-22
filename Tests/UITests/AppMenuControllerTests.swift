@@ -175,6 +175,8 @@ import Testing
     let controller = fixture.controller()
     controller.prepareToOpen()
     #expect(controller.handle(.down))
+    #expect(controller.model.highlight == AppMenuHighlight(item: .checkClaude, byKeyboard: true))
+    controller.handle(.down)
     #expect(controller.model.highlight == AppMenuHighlight(item: .updateAll, byKeyboard: true))
     controller.handle(.down)
     controller.handle(.right)

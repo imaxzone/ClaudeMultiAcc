@@ -1,4 +1,5 @@
 import AppKit
+import InstanceBuilder
 import Support
 import SwiftUI
 
@@ -7,6 +8,8 @@ import SwiftUI
 @MainActor
 enum AppMenuDemo {
   static let officialVersion = "3.1700.0"
+  /// The Claude the update check finds and downloads in the header shots.
+  static let newerClaude = "3.1800.0"
   static let release = AppReleaseInfo(
     version: "1.4.0", pageURL: URL(string: "https://github.com/example/ClaudeMultiAcc/releases/latest")
       ?? URL(fileURLWithPath: "/"))
@@ -25,17 +28,20 @@ enum AppMenuDemo {
   /// Installed versions by slug: 2nd and mv2 are behind.
   static let versions = ["main": officialVersion, "second": "3.1623.0", "fivex": officialVersion, "mv2": "3.1623.0"]
 
-  /// A controller filled the way an open fills it (`prepareToOpen`), never shown on screen.
+  /// A controller filled the way an open fills it (`prepareToOpen`), never shown on screen. `claude` is the Claude
+  /// update check's status; `newestClaude` a downloaded Claude newer than the official app (nil: none).
   static func controller(
     instances: [Instance] = instances, versions: [String: String] = versions, release: AppReleaseInfo? = release,
-    login: LaunchAtLoginState = .off, loginError: String? = nil, busy: AppMenuBusy = .idle
+    login: LaunchAtLoginState = .off, loginError: String? = nil, busy: AppMenuBusy = .idle,
+    claude: ClaudeUpdateStatus = .idle, newestClaude: String? = nil
   ) -> AppMenuController {
     let byPath = instances.reduce(into: [String: String]()) { result, instance in
       if let path = instance.appPath, let version = versions[instance.slug.raw] { result[path] = version }
     }
     let controller = AppMenuController(
       instances: { instances }, login: DemoLaunchAtLogin(login, errorText: loginError), actions: DemoMenuActions(),
-      releaseInfo: { release }, busy: { busy }, versions: DemoAppVersions(byPath: byPath),
+      releaseInfo: { release }, busy: { busy }, claudeUpdate: { claude }, newestClaude: { newestClaude },
+      versions: DemoAppVersions(byPath: byPath),
       icons: DemoAppIcons(instances: instances), presenter: nil)
     controller.prepareToOpen()
     return controller
@@ -125,5 +131,6 @@ final class DemoMenuActions: AppMenuActions {
   func delete(slug: String) {}
   func add() {}
   func openReleasePage(_ url: URL) {}
+  func checkClaudeUpdates() {}
   func quit() {}
 }

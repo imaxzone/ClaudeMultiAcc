@@ -6,7 +6,7 @@ import Support
 public struct UpdateDecision: Sendable, Equatable {
   public enum Action: String, Sendable {
     case skip, retry, needsIdentity = "needs-identity", wouldRebuild = "would-rebuild", swap, pending, fail
-    /// A verified build for the current official version waits for the running clone to quit.
+    /// A verified build for the current source version waits for the running clone to quit.
     case pendingWaiting = "pending-waiting"
     /// Another process holds `<data>/update.lock` (the app and the LaunchAgent share it).
     case skippedLocked = "skipped-locked"
@@ -32,9 +32,10 @@ public struct UpdateDecision: Sendable, Equatable {
   public static let everyClone = "all"
 }
 
-/// Rebuilds every cmacc-built clone forward-only after the official app updates (G20: any number of clones,
-/// in `instances.json` order). Legacy clones (`builtBy != "cmacc"`) are never touched. A running clone keeps
-/// running: its verified build waits in `pendingBuild`.
+/// Rebuilds every cmacc-built clone forward-only from the newest Claude (G20: any number of clones, in `instances.json`
+/// order): the official app after it updates, or a verified download that is newer (`ClaudeSourceStore.newest()`,
+/// derived from `paths` and `officialApp`). Legacy clones (`builtBy != "cmacc"`) are never touched. A running clone
+/// keeps running: its verified build waits in `pendingBuild`.
 public actor UpdateWatcher {
   static let debounce: TimeInterval = 30
   static let hourly: Duration = .seconds(3600)
@@ -88,7 +89,8 @@ public actor UpdateWatcher {
     self.sleep = sleep
   }
 
-  /// One full pass that builds and swaps (the in-app watcher and `cmacc update check --apply-when-idle`).
+  /// One full pass that builds and swaps (the in-app watcher, a newly stored download and
+  /// `cmacc update check --apply-when-idle`).
   public func handleOfficialChange() async -> [UpdateDecision] {
     await evaluate(apply: true)
   }
@@ -139,6 +141,9 @@ public actor UpdateWatcher {
 
   var lockFile: URL { UpdateLock.file(paths) }
 
+  /// The official app and the downloads under `<data>/source`; each pass builds from its `newest()`.
+  var sources: ClaudeSourceStore { ClaudeSourceStore(paths: paths, officialApp: officialApp) }
+
   func record(_ decision: UpdateDecision) async -> UpdateDecision {
     await log.write(decision.line, category: "updates")
     return decision
@@ -153,11 +158,11 @@ public actor UpdateWatcher {
       return []
     }
     let settings = await SettingsStore(file: paths.settingsFile).load()
-    let official = AppVersion.read(officialApp)
+    let source = sources.newest()
     var decisions: [UpdateDecision] = []
     for instance in instances where instance.kind == .clone {
       let autoRebuild = manual || settings.updates.autoRebuild
-      let decision = await decide(instance, official: official, autoRebuild: autoRebuild, apply: apply)
+      let decision = await decide(instance, source: source, autoRebuild: autoRebuild, apply: apply)
       decisions.append(await record(decision))
     }
     if apply, decisions.contains(where: { $0.action == .retry }) { scheduleRetry() }

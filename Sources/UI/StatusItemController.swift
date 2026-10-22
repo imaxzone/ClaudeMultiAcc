@@ -11,7 +11,7 @@ enum StatusItemIndicator: Equatable {
   case spinner
 }
 
-/// Owns the menu-bar status item: the template glyph, the blue dot while a clone is behind (a tiny spinner while an
+/// Owns the menu-bar status item: the template glyph, the red dot while a clone is behind (a tiny spinner while an
 /// update runs), and the app menu (`AppMenuController`) that a click opens and closes.
 @MainActor
 public final class StatusItemController: NSObject {

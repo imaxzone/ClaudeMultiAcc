@@ -11,9 +11,11 @@ import Support
 /// platter back at small 1× sizes.
 ///
 /// Base image: the registered icon of the official source app (`NSWorkspace`, the Assets.car icon), only when the
-/// source lies in `officialAppsRoot` and outside staging (G4); otherwise, or when that yields nothing ≥ 512 px, the
-/// largest image of the source's `electron.icns`. The pipeline reads it with `baseImage` before `recheck-source` and
-/// never queries the icon of a staged bundle. All intermediate files live in `workDir` (same volume as the clone).
+/// source lies in `officialAppsRoot` and outside staging (G4). Any other source (a Claude ClaudeMultiAcc downloaded)
+/// takes the registered icon of `<officialAppsRoot>/Claude.app` when that is a real directory outside staging, so every
+/// clone keeps the official icon. Otherwise, or when that yields nothing ≥ 512 px, the largest image of the source's
+/// `electron.icns`. The pipeline reads it with `baseImage` before `recheck-source` and never queries the icon of a
+/// staged bundle. All intermediate files live in `workDir` (same volume as the clone).
 public struct BadgeStep: Sendable {
   static let canvas = 1024
   static let minimumPixels = 512
@@ -42,13 +44,25 @@ public struct BadgeStep: Sendable {
 
   /// The base image and a detail line naming it (see the type comment); reads only the source.
   public func baseImage(source: URL, workDir: URL) async throws -> (CGImage, String) {
-    if isOfficialSource(source),
-       let icon = iconProvider.renderedIcon(appURL: source, pixels: Self.canvas, minimumPixels: Self.minimumPixels) {
-      return (icon, "base=workspace-icon \(icon.width)px")
+    if isOfficialSource(source) {
+      if let icon = renderedIcon(source) { return (icon, "base=workspace-icon \(icon.width)px") }
+    } else if let official = installedOfficialApp(), let icon = renderedIcon(official) {
+      return (icon, "base=workspace-icon (official) \(icon.width)px")
     }
     let icns = source.appendingPathComponent(SourceFacts.icnsPath)
     let image = try await IcnsTool(runner: runner).extractLargest(from: icns, workDir: workDir.appendingPathComponent("extract"))
     return (image, "base=electron.icns \(image.width)px")
+  }
+
+  private func renderedIcon(_ app: URL) -> CGImage? {
+    iconProvider.renderedIcon(appURL: app, pixels: Self.canvas, minimumPixels: Self.minimumPixels)
+  }
+
+  /// `<officialAppsRoot>/Claude.app` when it is a real directory (not a symlink) outside staging.
+  private func installedOfficialApp() -> URL? {
+    let app = officialAppsRoot.appendingPathComponent("Claude.app", isDirectory: true)
+    guard ClaudeSourceStore.isRealDirectory(app), !staging.contains(app) else { return nil }
+    return app
   }
 
   /// Symlinks are resolved first, so a link in the Applications folder pointing into staging is not official.

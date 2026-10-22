@@ -99,6 +99,8 @@ let fakeBadgedIcns = String(decoding: TestIcns.badged, as: UTF8.self)
                         work(clone).path + "/extract/x.iconset"])
   }
 
+  /// A source outside the Applications folder or inside staging is never icon-queried itself; the installed official
+  /// app stands in for it when there is one (`<root>/Claude.app` does not exist for the staged source).
   @Test func neverQueriesSourcesOutsideApplicationsOrInsideStaging() async throws {
     let root = try makeTempDir()
     defer { try? FileManager.default.removeItem(at: root) }
@@ -109,9 +111,9 @@ let fakeBadgedIcns = String(decoding: TestIcns.badged, as: UTF8.self)
       let step = BadgeStep(runner: fakeIconutil(), iconProvider: provider, staging: StagingArea(paths: paths),
                            officialAppsRoot: source == clone ? root : apps)
       let (_, detail) = try await step.baseImage(source: source, workDir: work(clone))
-      #expect(detail.hasPrefix("base=electron.icns"))
+      #expect(detail.hasPrefix(source == clone ? "base=electron.icns" : "base=workspace-icon (official)"))
     }
-    #expect(provider.requested.isEmpty)
+    #expect(provider.requested == [apps.appendingPathComponent("Claude.app").path])
   }
 
   @Test func symlinkIntoStagingIsNotOfficial() async throws {
@@ -123,8 +125,35 @@ let fakeBadgedIcns = String(decoding: TestIcns.badged, as: UTF8.self)
     let provider = FakeIconProvider(side: 1024)
     let step = BadgeStep(runner: fakeIconutil(), iconProvider: provider, staging: StagingArea(paths: paths), officialAppsRoot: apps)
     let (_, detail) = try await step.baseImage(source: link, workDir: work(clone))
-    #expect(detail.hasPrefix("base=electron.icns"))
-    #expect(provider.requested.isEmpty)
+    #expect(detail == "base=workspace-icon (official) 1024px")
+    #expect(provider.requested == [apps.appendingPathComponent("Claude.app").path])
+  }
+
+  /// A version ClaudeMultiAcc downloaded is badged on the installed official app's icon (every clone keeps the same
+  /// base); without a real official app directory, or when its icon is too small, on the download's `electron.icns`.
+  @Test func aBadgeOnADownloadedSourceUsesTheOfficialIcon() async throws {
+    let root = try makeTempDir()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let (paths, apps, clone) = try setUp(root)
+    let download = try MiniBundle.makeSource(in: paths.claudeSourcesDir.appendingPathComponent("3.1623.3.noindex"))
+    let official = apps.appendingPathComponent("Claude.app")
+    let provider = FakeIconProvider(side: 1024)
+    let step = BadgeStep(runner: fakeIconutil(), iconProvider: provider, staging: StagingArea(paths: paths), officialAppsRoot: apps)
+    let (base, detail) = try await step.baseImage(source: download, workDir: work(clone))
+    #expect(detail == "base=workspace-icon (official) 1024px" && base.width == 1024)
+    #expect(provider.requested == [official.path])
+
+    let small = BadgeStep(runner: fakeIconutil(), iconProvider: FakeIconProvider(side: 256), staging: StagingArea(paths: paths),
+                          officialAppsRoot: apps)
+    #expect(try await small.baseImage(source: download, workDir: work(clone)).1 == "base=electron.icns 1024px")
+
+    try FileManager.default.removeItem(at: official)
+    try FileManager.default.createSymbolicLink(at: official, withDestinationURL: download)
+    let runner = fakeIconutil()
+    let linked = BadgeStep(runner: runner, iconProvider: provider, staging: StagingArea(paths: paths), officialAppsRoot: apps)
+    #expect(try await linked.baseImage(source: download, workDir: work(clone)).1 == "base=electron.icns 1024px")
+    #expect(provider.requested == [official.path])
+    #expect(runner.commandLines.first?[3] == download.path + "/Contents/Resources/electron.icns")
   }
 
   @Test func invalidLabelThrowsBeforeWritingAnything() async throws {

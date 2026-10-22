@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// The whole menu, top to bottom: update banner (only while a clone is behind), the grid of apps ending in
-/// «+ Добавить», a separator, the login switch, «Выйти», and under them the ClaudeMultiAcc release card (only when
-/// there is one).
+/// The whole menu, top to bottom: the Claude update header (its line and ↻, always there), the update banner (only
+/// while a clone is behind), the grid of apps ending in «+ Добавить», a separator, the login switch, «Выйти», and
+/// under them the ClaudeMultiAcc release card (only when there is one).
 struct AppMenuView: View {
   @ObservedObject var model: AppMenuModel
   let anchors: AppMenuAnchors?
@@ -11,6 +11,10 @@ struct AppMenuView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
+      ClaudeUpdateHeaderView(
+        status: model.claudeUpdate, version: model.claudeVersion, isHighlighted: model.isHighlighted(.checkClaude),
+        hasFocusRing: model.hasKeyboardFocus(.checkClaude), onCheck: { actions.activate(.checkClaude) },
+        onHover: hover(.checkClaude))
       if let banner = model.content.banner {
         UpdateBannerView(
           banner: banner, isUpdating: model.busy.updating, isHighlighted: model.isHighlighted(.updateAll),

@@ -5,6 +5,7 @@ import Support
 enum BuilderTool {
   static let codesign = URL(fileURLWithPath: "/usr/bin/codesign")
   static let cp = URL(fileURLWithPath: "/bin/cp")
+  static let ditto = URL(fileURLWithPath: "/usr/bin/ditto")
   static let xattr = URL(fileURLWithPath: "/usr/bin/xattr")
   static let lsappinfo = URL(fileURLWithPath: "/usr/bin/lsappinfo")
   static let launchctl = URL(fileURLWithPath: "/bin/launchctl")

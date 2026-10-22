@@ -4,47 +4,51 @@ import Support
 extension UpdateWatcher {
   static let backupsPerClone = 2
 
-  /// A clone's `pendingBuild`: none, a verified build for the current official version, or stale.
+  /// A clone's `pendingBuild`: none, a verified build for the current source version, or stale.
   enum PendingState: Equatable {
     case none
     case valid(URL)
     case stale(String)
   }
 
-  /// The decision table for one clone, in order: builtBy, auto-rebuild, ShipIt installing, forward-only version, a valid
-  /// pending build (swap when idle, else keep waiting), identity, staging build (discarding stale and superseded
-  /// builds first), then swap when idle or keep the build pending.
-  func decide(_ instance: Instance, official: String?, autoRebuild: Bool, apply: Bool) async -> UpdateDecision {
+  /// The decision table for one clone against `source` (`ClaudeSourceStore.newest()`; nil without the official app),
+  /// in order: builtBy, auto-rebuild, ShipIt installing (only while the build would read the official app, or there is
+  /// no source because ShipIt may be replacing it), forward-only version, a valid pending build (swap when idle, else
+  /// keep waiting), identity, staging build from `source.app` (discarding stale and superseded builds first), then swap
+  /// when idle or keep the build pending.
+  func decide(_ instance: Instance, source: ClaudeSource?, autoRebuild: Bool, apply: Bool) async -> UpdateDecision {
     let slug = instance.slug.raw
     guard instance.builtBy == "cmacc" else {
       return UpdateDecision(slug: slug, action: .skip, detail: "builtBy=\(instance.builtBy ?? "unknown")")
     }
     guard autoRebuild else { return UpdateDecision(slug: slug, action: .skip, detail: UpdateDecision.autoRebuildOff) }
-    if await vendorShipIt.state() == .installing {
+    if source?.isOfficial ?? true, await vendorShipIt.state() == .installing {
       return UpdateDecision(slug: slug, action: .retry, detail: "vendor ShipIt installing (retry in 10 min)")
     }
-    guard let official, let clone = instance.installedVersion else {
-      return UpdateDecision(slug: slug, action: .skip, detail: "version unreadable (official \(official ?? "?"))")
+    guard let source, let clone = instance.installedVersion else {
+      return UpdateDecision(slug: slug, action: .skip, detail: "version unreadable (source \(source?.version ?? "?"))")
     }
-    guard VersionCompare.isNewer(official, than: clone) else {
-      return UpdateDecision(slug: slug, action: .skip, detail: "not newer (clone \(clone), official \(official))")
+    let target = source.version
+    guard VersionCompare.isNewer(target, than: clone) else {
+      return UpdateDecision(slug: slug, action: .skip, detail: "not newer (clone \(clone), source \(target))")
     }
     var note = ""
-    switch pendingState(instance, official: official) {
+    switch pendingState(instance, version: target) {
     case .valid(let staged):
-      guard apply else { return UpdateDecision(slug: slug, action: .wouldRebuild, detail: "\(clone) → \(official): swap pending build") }
-      return await swapPending(instance, staged: staged, from: clone, to: official)
+      guard apply else { return UpdateDecision(slug: slug, action: .wouldRebuild, detail: "\(clone) → \(target): swap pending build") }
+      return await swapPending(instance, staged: staged, from: clone, to: target)
     case .stale(let why): note = "discarded stale pending build (\(why)); "
     case .none: break
     }
     guard let identity = await identity() else {
       return UpdateDecision(slug: slug, action: .needsIdentity, detail: "no permanent signing identity (\(SigningSetup.hint))")
     }
-    guard apply else { return UpdateDecision(slug: slug, action: .wouldRebuild, detail: "\(clone) → \(official)") }
-    return await rebuild(instance, identity: identity, from: clone, to: official, note: note)
+    guard apply else { return UpdateDecision(slug: slug, action: .wouldRebuild, detail: "\(clone) → \(target)") }
+    return await rebuild(instance, identity: identity, from: clone, to: source, note: note)
   }
 
-  func pendingState(_ instance: Instance, official: String) -> PendingState {
+  /// `valid` only for a verified build of this clone whose report names `version` as its source version.
+  func pendingState(_ instance: Instance, version: String) -> PendingState {
     guard let path = instance.pendingBuild else { return .none }
     let app = URL(fileURLWithPath: path, isDirectory: true)
     var isDir: ObjCBool = false
@@ -57,50 +61,52 @@ extension UpdateWatcher {
     guard report.verified, report.slug == instance.slug.raw, report.identityKind != SigningIdentity.adhoc.kind,
           URL(fileURLWithPath: report.stagedPath).standardizedFileURL == app.standardizedFileURL
     else { return .stale("not a verified build of \(instance.slug.raw)") }
-    guard report.sourceVersion == official else { return .stale("built from \(report.sourceVersion)") }
+    guard report.sourceVersion == version else { return .stale("built from \(report.sourceVersion)") }
     return .valid(app)
   }
 
-  private func swapPending(_ instance: Instance, staged: URL, from clone: String, to official: String) async -> UpdateDecision {
+  private func swapPending(_ instance: Instance, staged: URL, from clone: String, to version: String) async -> UpdateDecision {
     let slug = instance.slug.raw
     do {
       let spec = try CloneSpec.from(instance: instance)
       guard await isIdle(instance, spec: spec) else {
-        return UpdateDecision(slug: slug, action: .pendingWaiting, detail: "running; \(official) build waits at \(staged.path)")
+        return UpdateDecision(slug: slug, action: .pendingWaiting, detail: "running; \(version) build waits at \(staged.path)")
       }
       let backup = try await swapIn(instance, staged: staged)
       return UpdateDecision(
-        slug: slug, action: .swap, detail: "\(clone) → \(official) from pending build (backup \(backup.path))")
+        slug: slug, action: .swap, detail: "\(clone) → \(version) from pending build (backup \(backup.path))")
     } catch {
       return UpdateDecision(slug: slug, action: .fail, detail: String(describing: error))
     }
   }
 
   private func rebuild(
-    _ instance: Instance, identity: SigningIdentity, from clone: String, to official: String, note: String
+    _ instance: Instance, identity: SigningIdentity, from clone: String, to source: ClaudeSource, note: String
   ) async -> UpdateDecision {
     let slug = instance.slug.raw
+    let target = source.version
     do {
       let spec = try CloneSpec.from(instance: instance)
       _ = try clonePolicy.checkApp(instance)
       _ = try StagingArea(paths: paths).discard(slug: instance.slug)
-      let report = try await pipeline.build(spec: spec, source: officialApp, identity: identity, intent: .stagingOnly)
+      let report = try await pipeline.build(spec: spec, source: source.app, identity: identity, intent: .stagingOnly)
       guard report.verified else {
         return UpdateDecision(slug: slug, action: .fail, detail: "\(note)build not verified: \(report.failure?.message ?? "?")")
       }
       let staged = URL(fileURLWithPath: report.stagedPath, isDirectory: true)
       guard await isIdle(instance, spec: spec) else {
         _ = try await store.upsert(instance.withBuild(builtBy: instance.builtBy, pendingBuild: report.stagedPath))
-        return UpdateDecision(slug: slug, action: .pending, detail: "\(note)running; \(clone) → \(official) staged at \(report.stagedPath)")
+        return UpdateDecision(slug: slug, action: .pending, detail: "\(note)running; \(clone) → \(target) staged at \(report.stagedPath)")
       }
       let backup = try await swapIn(instance, staged: staged)
-      return UpdateDecision(slug: slug, action: .swap, detail: "\(note)\(clone) → \(official) (backup \(backup.path))")
+      return UpdateDecision(slug: slug, action: .swap, detail: "\(note)\(clone) → \(target) (backup \(backup.path))")
     } catch {
       return UpdateDecision(slug: slug, action: .fail, detail: "\(note)\(String(describing: error))")
     }
   }
 
-  /// The positive path rules for the clone's app (`ClonePathPolicy`), checked before the build and again before the swap.
+  /// The positive path rules for the clone's app (`ClonePathPolicy`, which keeps protecting the official app), checked
+  /// before the build and again before the swap.
   var clonePolicy: ClonePathPolicy { ClonePathPolicy(home: paths.home, officialApp: officialApp) }
 
   /// Swap, register, make LaunchServices forget the backup, clear `pendingBuild`, drop the emptied staging dirs and keep

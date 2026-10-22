@@ -2,7 +2,8 @@ import AppKit
 import SwiftUI
 
 /// Every measurement, font, colour and motion of the new menu (approved variant «B»). Semantic system colours;
-/// the update blue is `systemBlue` everywhere (banner button, tile arrow, status-item dot), whatever the accent.
+/// the update blue is `systemBlue` (banner button, tile arrow), whatever the accent; the status item's dot and spinner
+/// are red with a white ring (`StatusGlyph`).
 enum AppMenuStyle {
   // MARK: Panel
 

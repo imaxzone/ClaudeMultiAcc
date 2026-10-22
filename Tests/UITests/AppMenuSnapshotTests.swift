@@ -1,4 +1,5 @@
 import AppKit
+import InstanceBuilder
 import Support
 import SwiftUI
 import Testing
@@ -9,9 +10,11 @@ import Testing
 @Suite(.serialized, .russian) struct AppMenuSnapshotTests {
   static let appearances: [(NSAppearance.Name, String)] = [(.aqua, "light"), (.darkAqua, "dark")]
   static let statusItems = ["statusitem", "statusitem-update", "statusitem-updating"]
-  static let panelStates = ["normal", "update", "focus", "updating", "deleting"]
+  /// The Claude update header's states (↻ and its line); the idle line «Claude 3.1700.0» is in every other shot.
+  static let claudeStates = ["claude-checking", "claude-downloading", "claude-uptodate", "claude-failed"]
+  static let panelStates = ["normal", "update", "focus", "updating", "deleting"] + claudeStates
   /// The panel states shot again in English.
-  static let englishPanelStates = ["normal-en", "update-en"]
+  static let englishPanelStates = (["normal", "update"] + claudeStates).map { "\($0)-en" }
 
   /// The new-menu part of `cmacc ui snapshot`, per appearance: the Russian shots, then the English ones.
   static func expectedNames(_ appearance: String) -> [String] {
@@ -63,12 +66,21 @@ import Testing
     }
   }
 
-  /// The status-item shots differ only by the blue mark in the glyph's gap: none, the dot, or the open spinner ring
-  /// (hollow in the middle, blue on its rim).
+  /// The status-item shots differ only by the mark in the glyph's gap: none, the red dot in its white ring, or the open
+  /// red spinner ring with a white outline (hollow in the middle, red on its rim).
   @Test func statusItemShotsShowTheDotOnlyWhenUpdating() throws {
+    func color(_ rep: NSBitmapImageRep, _ x: Int, _ y: Int) -> NSColor? { rep.colorAt(x: x, y: y)?.usingColorSpace(.sRGB) }
     func isBlue(_ rep: NSBitmapImageRep, _ x: Int, _ y: Int) -> Bool {
-      guard let color = rep.colorAt(x: x, y: y)?.usingColorSpace(.sRGB) else { return false }
+      guard let color = color(rep, x, y) else { return false }
       return color.blueComponent > 0.8 && color.redComponent < 0.3
+    }
+    func isRed(_ rep: NSBitmapImageRep, _ x: Int, _ y: Int) -> Bool {
+      guard let color = color(rep, x, y) else { return false }
+      return color.redComponent > 0.8 && color.greenComponent < 0.4 && color.blueComponent < 0.4
+    }
+    func isWhite(_ rep: NSBitmapImageRep, _ x: Int, _ y: Int) -> Bool {
+      guard let color = color(rep, x, y) else { return false }
+      return min(color.redComponent, color.greenComponent, color.blueComponent) > 0.9
     }
     for (appearance, _) in Self.appearances {
       let shots = AppMenuShots.all(scale: 2).filter { $0.name("x").hasPrefix("statusitem") && $0.name("x").hasSuffix("@2x.png") }
@@ -79,9 +91,39 @@ import Testing
       let y = Int(((24 - StatusGlyph.size.height) / 2 + StatusGlyph.size.height - StatusGlyph.dotCenter.y) * 2)
       // The ring's bottom, half a line inside its outer edge.
       let rim = y + Int(((StatusGlyph.spinnerDiameter - StatusGlyph.spinnerLineWidth) / 2 * 2).rounded())
-      #expect(!isBlue(reps[0], x, y) && !isBlue(reps[0], x, rim), "\(appearance.rawValue): no mark")
-      #expect(isBlue(reps[1], x, y), "\(appearance.rawValue): the dot")
-      #expect(!isBlue(reps[2], x, y) && isBlue(reps[2], x, rim), "\(appearance.rawValue): the spinner ring")
+      // Midway through the dot's white ring, above its centre (2x pixels).
+      let ringRadius: CGFloat = StatusGlyph.dotOuterDiameter / 2 - StatusGlyph.dotRingWidth / 2
+      let ring = y - Int((ringRadius * 2).rounded())
+      #expect(!isBlue(reps[0], x, y) && !isBlue(reps[0], x, rim) && !isRed(reps[0], x, y), "\(appearance.rawValue): no mark")
+      #expect(isRed(reps[1], x, y) && isWhite(reps[1], x, ring), "\(appearance.rawValue): the red dot in its white ring")
+      #expect(!isRed(reps[2], x, y) && isRed(reps[2], x, rim), "\(appearance.rawValue): the red spinner ring")
+      // Midway through the white outline beyond the ring's red line.
+      let outlineRadius: CGFloat = StatusGlyph.spinnerDiameter / 2 + StatusGlyph.spinnerOutlineWidth / 2
+      let outline = y + Int((outlineRadius * 2).rounded(.down))
+      #expect(isWhite(reps[2], x, outline), "\(appearance.rawValue): the spinner's white outline")
+      #expect(!reps.contains { isBlue($0, x, y) || isBlue($0, x, rim) }, "\(appearance.rawValue): nothing blue")
+    }
+  }
+
+  /// The header's line is red after a failed check and secondary text otherwise, in both appearances.
+  @Test func onlyAFailedCheckHasARedLine() throws {
+    func hasRed(_ state: AppMenuShots.PanelState, _ appearance: NSAppearance.Name) throws -> Bool {
+      let png = try AppMenuShots.panel(AppMenuShots.controller(state).model, appearance: appearance, scale: 2)
+      let rep = try #require(NSBitmapImageRep(data: png))
+      // The header row under the panel padding (2x pixels); the banner and the grid start below it.
+      let band = Int((AppMenuStyle.padding + AppMenuStyle.headerButton + 2) * 2)
+      for y in 0..<band {
+        for x in 0..<(rep.pixelsWide * 3 / 4) {
+          guard let color = rep.colorAt(x: x, y: y)?.usingColorSpace(.sRGB) else { continue }
+          if color.redComponent > 0.8 && color.greenComponent < 0.4 && color.blueComponent < 0.4 { return true }
+        }
+      }
+      return false
+    }
+    for (appearance, _) in Self.appearances {
+      #expect(try hasRed(.claudeFailed, appearance), "\(appearance.rawValue)")
+      #expect(try !hasRed(.claudeChecking, appearance), "\(appearance.rawValue)")
+      #expect(try !hasRed(.claudeUpToDate, appearance), "\(appearance.rawValue)")
     }
   }
 
@@ -97,6 +139,16 @@ import Testing
     #expect(updating.busy == AppMenuBusy(updating: true) && updating.content.banner?.slugs == ["second", "mv2"])
     let deleting = AppMenuShots.controller(.deleting).model
     #expect(deleting.busy == AppMenuBusy(deleting: ["fivex"]) && deleting.content.banner != nil)
+    #expect(normal.claudeUpdate == .idle && normal.claudeVersion == AppMenuDemo.officialVersion)
+    let checking = AppMenuShots.controller(.claudeChecking).model
+    #expect(checking.claudeUpdate == .checking && checking.content.banner == nil)
+    let downloading = AppMenuShots.controller(.claudeDownloading).model
+    #expect(downloading.claudeUpdate == .downloading(version: AppMenuDemo.newerClaude, percent: 42))
+    let upToDate = AppMenuShots.controller(.claudeUpToDate).model
+    #expect(upToDate.claudeUpdate == .upToDate(version: AppMenuDemo.officialVersion))
+    #expect(upToDate.hasKeyboardFocus(.checkClaude))
+    let failed = AppMenuShots.controller(.claudeFailed).model
+    #expect(failed.claudeUpdate == .failed(.network("offline")) && failed.content.banner != nil && failed.release != nil)
   }
 
   /// The new menu keeps its width and, even with a dozen clones all behind, fits a 900 pt screen.

@@ -1,4 +1,5 @@
 import AppKit
+import InstanceBuilder
 import Support
 import SwiftUI
 
@@ -12,9 +13,13 @@ import SwiftUI
 /// - `appmenu-deleting` — «Claude 5x акк» being removed: dimmed under a spinner;
 /// - `appmenu-actions` — «Claude 2nd» (behind) selected with its actions menu open under it: «Открыть», «Обновить
 ///   до …», «Изменить…», «Переустановить…», «Показать в Finder», «Удалить «…»…»;
-/// - `appmenu-official` — the official tile with its two actions, «Открыть» and «Показать в Finder».
-/// The menu shots are Russian; `appmenu-normal-en`, `appmenu-update-en`, `appmenu-actions-en` and
-/// `appmenu-official-en` repeat four of them in English, so the longer English labels are reviewed too.
+/// - `appmenu-official` — the official tile with its two actions, «Открыть» and «Показать в Finder»;
+/// - `appmenu-claude-checking`, `-downloading`, `-uptodate`, `-failed` — the header's ↻ and its line during a Claude
+///   update check (downloading 42 %), after a manual check that found nothing (with keyboard focus on ↻), and after a
+///   failed one (red, over the banner and with the release card). Every other shot shows the idle line «Claude
+///   3.1700.0».
+/// The menu shots are Russian; `appmenu-normal-en`, `appmenu-update-en`, the four header shots, `appmenu-actions-en`
+/// and `appmenu-official-en` repeat them in English, so the longer English labels are reviewed too.
 @MainActor
 enum AppMenuShots {
   /// The panel states shot on their own (file name prefix as raw value).
@@ -24,12 +29,18 @@ enum AppMenuShots {
     case focus = "appmenu-focus"
     case updating = "appmenu-updating"
     case deleting = "appmenu-deleting"
+    case claudeChecking = "appmenu-claude-checking"
+    case claudeDownloading = "appmenu-claude-downloading"
+    case claudeUpToDate = "appmenu-claude-uptodate"
+    case claudeFailed = "appmenu-claude-failed"
   }
 
   static let tileMenus = [("appmenu-actions", "second"), ("appmenu-official", "main")]
 
   /// The shots repeated in English (file name prefix), after the Russian ones.
-  static let englishPanels: [PanelState] = [.normal, .update]
+  static let englishPanels: [PanelState] = [
+    .normal, .update, .claudeChecking, .claudeDownloading, .claudeUpToDate, .claudeFailed,
+  ]
   static let englishTileMenus = tileMenus
 
   static func all(scale: CGFloat) -> [SnapshotCatalog.Shot] {
@@ -50,12 +61,14 @@ enum AppMenuShots {
     }
   }
 
+  /// Every clone current, no release, the login switch on.
+  private static var current: [String: String] { AppMenuDemo.versions.mapValues { _ in AppMenuDemo.officialVersion } }
+
   /// The demo controller in `state`, filled as an open fills it.
   static func controller(_ state: PanelState) -> AppMenuController {
     switch state {
     case .normal:
-      return AppMenuDemo.controller(
-        versions: AppMenuDemo.versions.mapValues { _ in AppMenuDemo.officialVersion }, release: nil, login: .on)
+      return AppMenuDemo.controller(versions: current, release: nil, login: .on)
     case .update:
       return AppMenuDemo.controller()
     case .focus:
@@ -66,6 +79,19 @@ enum AppMenuShots {
       return AppMenuDemo.controller(busy: AppMenuBusy(updating: true))
     case .deleting:
       return AppMenuDemo.controller(busy: AppMenuBusy(deleting: ["fivex"]))
+    case .claudeChecking:
+      return AppMenuDemo.controller(versions: current, release: nil, login: .on, claude: .checking)
+    case .claudeDownloading:
+      return AppMenuDemo.controller(
+        versions: current, release: nil, login: .on,
+        claude: .downloading(version: AppMenuDemo.newerClaude, percent: 42))
+    case .claudeUpToDate:
+      let controller = AppMenuDemo.controller(
+        versions: current, release: nil, login: .on, claude: .upToDate(version: AppMenuDemo.officialVersion))
+      controller.model.highlight = AppMenuHighlight(item: .checkClaude, byKeyboard: true)
+      return controller
+    case .claudeFailed:
+      return AppMenuDemo.controller(claude: .failed(.network("offline")))
     }
   }
 
@@ -163,7 +189,7 @@ final class FlippedCanvas: NSView {
 }
 
 /// The status item on a strip of menu bar between two system extras (Wi-Fi, battery): the glyph tinted like a
-/// template image and, in the glyph's gap, the blue dot or the spinner ring (as `StatusDotView` draws them, still).
+/// template image and, in the glyph's gap, the red dot or the red spinner ring (as `StatusDotView` draws them, still).
 struct StatusItemStrip: View {
   let indicator: StatusItemIndicator
 
@@ -190,16 +216,25 @@ struct StatusItemStrip: View {
       EmptyView()
     case .dot:
       Circle()
-        .fill(AppMenuStyle.updateBlue)
-        .frame(width: StatusGlyph.dotDiameter, height: StatusGlyph.dotDiameter)
+        .fill(Color(nsColor: StatusGlyph.dotFill))
+        .overlay { Circle().strokeBorder(Color(nsColor: StatusGlyph.dotRing), lineWidth: StatusGlyph.dotRingWidth) }
+        .frame(width: StatusGlyph.dotOuterDiameter, height: StatusGlyph.dotOuterDiameter)
     case .spinner:
-      // `StatusDotView.ringPath`: three quarters from the top, clockwise.
-      Circle()
-        .inset(by: StatusGlyph.spinnerLineWidth / 2)
-        .trim(from: 0, to: StatusGlyph.spinnerSweep)
-        .stroke(AppMenuStyle.updateBlue, style: StrokeStyle(lineWidth: StatusGlyph.spinnerLineWidth, lineCap: .round))
-        .rotationEffect(.degrees(-90))
-        .frame(width: StatusGlyph.spinnerDiameter, height: StatusGlyph.spinnerDiameter)
+      // `StatusDotView.ringPath`: three quarters from the top, clockwise; the white outline under the red line.
+      ZStack {
+        spinnerArc(Color(nsColor: StatusGlyph.dotRing),
+                   width: StatusGlyph.spinnerLineWidth + 2 * StatusGlyph.spinnerOutlineWidth)
+        spinnerArc(Color(nsColor: StatusGlyph.dotFill), width: StatusGlyph.spinnerLineWidth)
+      }
+      .frame(width: StatusGlyph.spinnerDiameter, height: StatusGlyph.spinnerDiameter)
     }
+  }
+
+  private func spinnerArc(_ color: Color, width: CGFloat) -> some View {
+    Circle()
+      .inset(by: StatusGlyph.spinnerLineWidth / 2)
+      .trim(from: 0, to: StatusGlyph.spinnerSweep)
+      .stroke(color, style: StrokeStyle(lineWidth: width, lineCap: .round))
+      .rotationEffect(.degrees(-90))
   }
 }

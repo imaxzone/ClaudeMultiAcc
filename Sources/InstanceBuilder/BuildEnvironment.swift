@@ -23,11 +23,18 @@ public struct BuildEnvironment: Sendable {
     self.sourcePolicy = sourcePolicy
   }
 
-  /// Real checks: NSRunningApplication/lsappinfo/lock, launchctl + process scan, volume capacity.
-  public static func live(runner: ProcessRunning, sourcePolicy: SourcePolicy = .vendor) -> BuildEnvironment {
+  /// Real checks: NSRunningApplication/lsappinfo/lock, launchctl + process scan, volume capacity. A source inside
+  /// `downloads` (`Paths.claudeSourcesDir`) skips the ShipIt check: ShipIt only replaces the app it was started from,
+  /// and ClaudeMultiAcc's own downloads are never started.
+  public static func live(runner: ProcessRunning, sourcePolicy: SourcePolicy = .vendor, downloads: URL? = nil)
+    -> BuildEnvironment
+  {
     BuildEnvironment(
       running: RunningCheck(runner: runner),
-      vendorUpdate: { source in VendorUpdateCheck(runner: runner, sourceApp: source) },
+      vendorUpdate: { source in
+        if let downloads, LaunchServicesCleanup.isInside(source, downloads) { return NoVendorUpdate() }
+        return VendorUpdateCheck(runner: runner, sourceApp: source)
+      },
       availableBytes: volumeAvailableBytes, sourcePolicy: sourcePolicy)
   }
 
@@ -35,4 +42,9 @@ public struct BuildEnvironment: Sendable {
     let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
     return values?.volumeAvailableCapacityForImportantUsage
   }
+}
+
+/// A source no ShipIt ever replaces (a Claude ClaudeMultiAcc downloaded itself).
+struct NoVendorUpdate: VendorUpdateChecking {
+  func state() async -> VendorUpdateState { .idle }
 }

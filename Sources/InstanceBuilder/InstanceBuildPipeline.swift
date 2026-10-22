@@ -19,9 +19,12 @@ public actor InstanceBuildPipeline {
   let staging: StagingArea
   let log = AppLog.logger("builder")
 
-  /// The default: live environment, NSWorkspace icons of the apps in /Applications.
+  /// The default: live environment (no ShipIt check for downloaded sources), NSWorkspace icons of the apps in
+  /// /Applications.
   public init(paths: Paths, runner: ProcessRunning, launcherBinary: URL, clock: any Support.Clock) {
-    self.init(paths: paths, runner: runner, launcherBinary: launcherBinary, clock: clock, environment: .live(runner: runner))
+    self.init(
+      paths: paths, runner: runner, launcherBinary: launcherBinary, clock: clock,
+      environment: .live(runner: runner, downloads: paths.claudeSourcesDir))
   }
 
   public init(

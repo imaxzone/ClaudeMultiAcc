@@ -61,7 +61,7 @@ struct NewInstanceCommand {
     let pipeline = InstanceBuildPipeline(
       paths: paths, runner: runner, launcherBinary: InstanceCommand.launcherURL(options), clock: SystemClock())
     let report = try await pipeline.build(
-      spec: request.spec(home: paths.home), source: InstanceCommand.defaultSource, identity: identity,
+      spec: request.spec(home: paths.home), source: InstanceCommand.defaultSource(paths), identity: identity,
       intent: install ? .install : .stagingOnly)
     Console.out(InstanceCommand.summary(report))
     guard report.verified else { return ExitCode.failure }

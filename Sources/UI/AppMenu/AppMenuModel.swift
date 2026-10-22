@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import InstanceBuilder
 import Support
 
 /// The «Открывать при старте системы» row as last read from the switch; the wording and the switch position come
@@ -45,6 +46,10 @@ public final class AppMenuModel: ObservableObject {
   @Published var menuTile: String?
   /// An update run and the clones being removed (`AppMenuController`'s `busy` source).
   @Published public internal(set) var busy: AppMenuBusy = .idle
+  /// The Claude update check as the header shows it: a result already seen in an open panel reads as idle.
+  @Published public internal(set) var claudeUpdate: ClaudeUpdateStatus = .idle
+  /// The Claude the clones are built from (the newest source), for the header's idle line; nil when unknown.
+  @Published public internal(set) var claudeVersion: String?
 
   public init() {}
 

@@ -25,7 +25,13 @@ struct InstanceCommand: Command {
     only explains this. verify still accepts the Finder custom icon of a clone built before that change: it reports it
     as custom-icon and then runs codesign without --strict.
     """
-  static let defaultSource = URL(fileURLWithPath: "/Applications/Claude.app", isDirectory: true)
+  static let officialApp = URL(fileURLWithPath: "/Applications/Claude.app", isDirectory: true)
+
+  /// What a build or verify uses without `--source`: the newest Claude (`ClaudeSourceStore.newest()`, a verified
+  /// download only while it is strictly newer than the official app), else the official app's path.
+  static func defaultSource(_ paths: Paths, officialApp: URL = InstanceCommand.officialApp) -> URL {
+    ClaudeSourceStore(paths: paths, officialApp: officialApp).newest()?.app ?? officialApp
+  }
 
   func run(_ args: [String]) async throws -> Int32 {
     guard let sub = args.first, let options = InstanceOptions.parse(Array(args.dropFirst())) else {
@@ -63,7 +69,8 @@ struct InstanceCommand: Command {
     let runner = SystemProcessRunner()
     let pipeline = InstanceBuildPipeline(
       paths: paths, runner: runner, launcherBinary: Self.launcherURL(options), clock: SystemClock())
-    let source = options.values["--source"].map { URL(fileURLWithPath: $0, isDirectory: true) } ?? Self.defaultSource
+    let source = options.values["--source"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+      ?? Self.defaultSource(paths)
     let report = try await pipeline.build(spec: spec, source: source, identity: identity, intent: .stagingOnly)
     if options.flags.contains("--json") {
       Console.out(String(decoding: try JSONCoding.encoder.encode(report), as: UTF8.self))
@@ -107,7 +114,8 @@ struct InstanceCommand: Command {
     let app = URL(fileURLWithPath: path, isDirectory: true)
     let stored = try CloneSpec.fromStagedApp(app)
     let spec = options.values["--badge"].map { stored.with(badge: $0) } ?? stored
-    let source = options.values["--source"].map { URL(fileURLWithPath: $0, isDirectory: true) } ?? Self.defaultSource
+    let source = options.values["--source"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+      ?? Self.defaultSource(Paths.live())
     let runner = SystemProcessRunner()
     let vendor = try await runner.run(ProcessRequest(
       executable: URL(fileURLWithPath: "/usr/bin/codesign"), arguments: ["-d", "--entitlements", "-", "--xml", source.path],

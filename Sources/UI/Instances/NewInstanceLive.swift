@@ -41,13 +41,15 @@ public struct LiveNewInstanceServices: NewInstanceServices {
     await SigningIdentityCheck(paths: paths, runner: runner).permanentIdentity()
   }
 
+  /// A staging build from the newest Claude: a verified download newer than `<applicationsDir>/Claude.app`, else that
+  /// official app.
   public func build(_ request: NewInstanceRequest, identity: SigningIdentity) async throws -> BuildReport {
     try paths.ensureDataDirs()
     let spec = request.spec(home: paths.home)
+    let official = applicationsDir.appendingPathComponent("Claude.app", isDirectory: true)
+    let source = ClaudeSourceStore(paths: paths, officialApp: official).newest()?.app ?? official
     let pipeline = InstanceBuildPipeline(paths: paths, runner: runner, launcherBinary: launcherBinary, clock: SystemClock())
-    return try await pipeline.build(
-      spec: spec, source: applicationsDir.appendingPathComponent("Claude.app", isDirectory: true), identity: identity,
-      intent: .stagingOnly)
+    return try await pipeline.build(spec: spec, source: source, identity: identity, intent: .stagingOnly)
   }
 
   public func discard(slug: String) async throws {

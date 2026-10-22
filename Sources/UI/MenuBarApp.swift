@@ -21,13 +21,17 @@ public final class MenuBarApp {
   private let runner = SystemProcessRunner()
   private let launcher = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/CloneLauncher")
   private var statusItem: StatusItemController?
-  private var menu: AppMenuController?
+  private(set) var menu: AppMenuController?
   private var actions: AppActions?
   private var updateWatcher: UpdateWatcher?
   private var signIn: SignInRouterController?
   private var releaseNotice: ReleaseNotice?
   private var deleteFlow: DeleteFlow?
   private var updates: UpdateFlow?
+  /// The Claude update check behind the menu's ↻ (`MenuBarApp+ClaudeUpdates`).
+  private(set) var claudeUpdates: ClaudeUpdateChecker?
+  /// Its last status, in the order it reported them; the menu reads it.
+  var claudeStatus: ClaudeUpdateStatus = .idle
   private var workspaceObservers: [NSObjectProtocol] = []
   private let log = AppLog.logger("menu-bar-app")
 
@@ -57,16 +61,21 @@ public final class MenuBarApp {
     self.deleteFlow = deleteFlow
     let updates = makeUpdateFlow(watcher: watcher)
     self.updates = updates
+    let claudeUpdates = Self.makeClaudeUpdates(paths: paths, runner: runner)
+    self.claudeUpdates = claudeUpdates
 
     let editor = InstanceEditorWindowController(
       paths: paths, launcherBinary: launcher, ensureSigning: ensureSigning,
       onChange: { [weak self] instance in self?.instanceSaved(instance) })
     let actions = AppActions(
-      list: list, updates: updates, editor: editor, remove: { [weak self] slug in self?.delete(slug: slug) })
+      list: list, updates: updates, editor: editor, remove: { [weak self] slug in self?.delete(slug: slug) },
+      checkClaude: { [weak self] in self?.checkClaudeNow() })
     let menu = AppMenuController(
       instances: { list.instances }, login: LaunchAtLoginController(home: paths.home), actions: actions,
       releaseInfo: { releaseNotice.available },
-      busy: { AppMenuBusy(updating: updates.isRunning, deleting: deleteFlow.deleting) })
+      busy: { AppMenuBusy(updating: updates.isRunning, deleting: deleteFlow.deleting) },
+      claudeUpdate: { [weak self] in self?.claudeStatus ?? .idle },
+      newestClaude: { [paths] in ClaudeSourceStore(paths: paths).newest()?.version })
     // A clone being deleted is not updated with the others.
     actions.behindSlugs = { [weak menu] in
       (menu?.model.content.banner?.slugs ?? []).filter { !deleteFlow.deleting.contains($0) }
@@ -80,13 +89,14 @@ public final class MenuBarApp {
     updates.onRunningChange = { [weak menu] in menu?.busyChanged() }
     observeDeleting(deleteFlow)
     observeWorkspace()
-    Task { await self.boot(watcher: watcher) }
+    Task { await self.boot(watcher: watcher, claudeUpdates: claudeUpdates) }
   }
 
   /// Before quitting: hands `claude://` back if a clone was still waiting for sign-in (a queued task would never run
   /// after exit), stops the watchers and lets a running update pass end, so no clone is left half swapped.
   public func shutdown() async {
     releaseNotice?.stop()
+    await claudeUpdates?.stop()
     list.stop()
     if let signIn {
       await Self.waitAtMost(Self.handBackTimeout) { await signIn.stopAndSettle() }
@@ -99,7 +109,7 @@ public final class MenuBarApp {
     }
   }
 
-  private func boot(watcher: UpdateWatcher) async {
+  private func boot(watcher: UpdateWatcher, claudeUpdates: ClaudeUpdateChecker) async {
     await list.start()
     // Backups and staged builds must never be offered by macOS as apps; the dump runs to ~16 MB on a busy Mac.
     let paths = self.paths
@@ -111,6 +121,7 @@ public final class MenuBarApp {
     await watcher.onPassFinished { [weak self] in await self?.list.reload() }
     await watcher.start()
     log.info("Started with \(self.list.instances.count, privacy: .public) instances")
+    await startClaudeUpdates(claudeUpdates, watcher: watcher)
     // Claude may have updated while ClaudeMultiAcc was not running: one pass now, not in an hour.
     _ = await watcher.handleOfficialChange()
   }

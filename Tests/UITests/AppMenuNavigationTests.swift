@@ -5,7 +5,7 @@ import Testing
 /// Keyboard model of the menu: arrows walk the 3-column grid and the rows, Tab cycles, Return/Space activate, ⌥Return
 /// opens a tile's app.
 @Suite struct AppMenuNavigationTests {
-  /// Banner + main, 2nd, 5x, mv2 + «Добавить» (grid of 5: rows [main 2nd 5x] [mv2 add]) + login, quit, release.
+  /// ↻ + banner + main, 2nd, 5x, mv2 + «Добавить» (grid of 5: rows [main 2nd 5x] [mv2 add]) + login, quit, release.
   static let content = AppMenuContentTests.build()
   static let full = AppMenuLayout(content: content, hasRelease: true)
   static let plain = AppMenuLayout(
@@ -15,25 +15,26 @@ import Testing
     AppMenuNavigation.target(from: from, key, in: layout)
   }
 
-  /// The release line is the last row, under «Выйти».
-  @Test func linearOrderIsBannerGridRowsRelease() {
+  /// ↻ at the top, the release line is the last row, under «Выйти».
+  @Test func linearOrderIsHeaderBannerGridRowsRelease() {
     #expect(Self.full.linear == [
-      .updateAll, .tile("main"), .tile("second"), .tile("fivex"), .tile("mv2"), .add, .login, .quit, .release,
+      .checkClaude, .updateAll, .tile("main"), .tile("second"), .tile("fivex"), .tile("mv2"), .add, .login, .quit,
+      .release,
     ])
-    #expect(Self.plain.linear.first == .tile("main"))
+    #expect(Self.plain.linear.prefix(2) == [.checkClaude, .tile("main")])
     #expect(!Self.plain.linear.contains(.release))
     #expect(Self.full.grid == [.tile("main"), .tile("second"), .tile("fivex"), .tile("mv2"), .add])
   }
 
   @Test func nothingHighlightedStartsAtTheTopOrTheBottom() {
-    #expect(Self.go(nil, .down) == .updateAll)
-    #expect(Self.go(nil, .right) == .updateAll)
-    #expect(Self.go(nil, .next) == .updateAll)
+    #expect(Self.go(nil, .down) == .checkClaude)
+    #expect(Self.go(nil, .right) == .checkClaude)
+    #expect(Self.go(nil, .next) == .checkClaude)
     #expect(Self.go(nil, .up) == .release)
     #expect(Self.go(nil, .previous) == .release)
     #expect(Self.go(nil, .up, Self.plain) == .quit)
-    #expect(Self.go(nil, .down, Self.plain) == .tile("main"))
-    #expect(Self.go(.tile("gone"), .down) == .updateAll)
+    #expect(Self.go(nil, .down, Self.plain) == .checkClaude)
+    #expect(Self.go(.tile("gone"), .down) == .checkClaude)
     #expect(Self.go(nil, .openApp) == nil)
   }
 
@@ -68,17 +69,19 @@ import Testing
     #expect(Self.go(.quit, .down) == .release)
     #expect(Self.go(.release, .up) == .quit)
     #expect(Self.go(.tile("mv2"), .down, Self.plain) == .login)
-    #expect(Self.go(.tile("main"), .up, Self.plain) == .quit)
+    #expect(Self.go(.tile("main"), .up, Self.plain) == .checkClaude)
+    #expect(Self.go(.checkClaude, .down, Self.plain) == .tile("main"))
   }
 
   @Test func verticalArrowsWrapLikeAMenu() {
-    #expect(Self.go(.release, .down) == .updateAll)
-    #expect(Self.go(.updateAll, .up) == .release)
-    #expect(Self.go(.quit, .down, Self.plain) == .tile("main"))
+    #expect(Self.go(.release, .down) == .checkClaude)
+    #expect(Self.go(.checkClaude, .up) == .release)
+    #expect(Self.go(.updateAll, .up) == .checkClaude)
+    #expect(Self.go(.quit, .down, Self.plain) == .checkClaude)
   }
 
   @Test func horizontalArrowsDoNothingOutsideTheGrid() {
-    for item in [AppMenuItem.updateAll, .release, .login, .quit] {
+    for item in [AppMenuItem.checkClaude, .updateAll, .release, .login, .quit] {
       #expect(Self.go(item, .left) == item)
       #expect(Self.go(item, .right) == item)
     }
@@ -92,16 +95,17 @@ import Testing
       visited.append(try #require(item))
     }
     #expect(visited == Self.full.linear)
-    #expect(Self.go(.release, .next) == .updateAll)
-    #expect(Self.go(.updateAll, .previous) == .release)
+    #expect(Self.go(.release, .next) == .checkClaude)
+    #expect(Self.go(.checkClaude, .previous) == .release)
+    #expect(Self.go(.updateAll, .previous) == .checkClaude)
     #expect(Self.go(.add, .previous) == .tile("mv2"))
   }
 
   @Test func emptyGridStillReachesAddAndTheRows() {
     let layout = AppMenuLayout(content: .empty, hasRelease: false)
-    #expect(layout.linear == [.add, .login, .quit])
+    #expect(layout.linear == [.checkClaude, .add, .login, .quit])
     #expect(Self.go(.add, .down, layout) == .login)
-    #expect(Self.go(.add, .up, layout) == .quit)
+    #expect(Self.go(.add, .up, layout) == .checkClaude)
   }
 
   // MARK: Keys

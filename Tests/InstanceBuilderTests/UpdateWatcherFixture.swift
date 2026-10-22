@@ -24,6 +24,8 @@ struct WatcherFixture {
   let log: EventLog
   let running: MutableRunningSet
   let sleeps: SleepRecorder
+  /// The `source` of every build, in order.
+  let sources: EventLog
 }
 
 /// instances-four.json plus a fifth, idle cmacc-built clone `home`: main, second (legacy), work (cmacc,
@@ -56,14 +58,25 @@ func makeWatcherFixture(_ k: WatcherKnobs = WatcherKnobs(), _ name: String = #fu
   let sleeps = SleepRecorder()
   let identity: SigningIdentity? = k.identity ? .certificate(sha1: testSHA1, keychain: nil) : nil
   let builder = FakeCloneBuilder(paths: paths, log: log, verified: k.verified)
+  let sources = EventLog()
+  let gated: any CloneBuilding = k.buildGate.map { GatedCloneBuilder(inner: builder, gate: $0) } ?? builder
   let watcher = UpdateWatcher(
-    paths: paths, store: store, pipeline: k.buildGate.map { GatedCloneBuilder(inner: builder, gate: $0) } ?? builder,
+    paths: paths, store: store, pipeline: SourceRecordingBuilder(inner: gated, sources: sources),
     running: running, vendorShipIt: FakeVendorUpdateCheck(state: k.vendor),
     registrar: FakeRegistrar(log: log, unregisterFails: k.unregisterFails),
     log: RedactingFileLog(url: paths.logsDir.appendingPathComponent("updates.log")),
     clock: FixedClock(now: Date(timeIntervalSince1970: 1_790_000_000)), identity: { identity },
     officialApp: apps.appendingPathComponent("Claude.app"), timeZone: .gmt, sleep: { await sleeps.sleep($0) })
-  return WatcherFixture(root: root, paths: paths, watcher: watcher, log: log, running: running, sleeps: sleeps)
+  return WatcherFixture(
+    root: root, paths: paths, watcher: watcher, log: log, running: running, sleeps: sleeps, sources: sources)
+}
+
+/// A verified-looking download ClaudeMultiAcc stored: `<data>/source/<version>.noindex/Claude.app` with the vendor
+/// bundle id and `version` (just an Info.plist).
+@discardableResult
+func writeDownloadedSource(_ paths: Paths, version: String) throws -> URL {
+  let app = paths.claudeSourcesDir.appendingPathComponent("\(version).noindex/Claude.app", isDirectory: true)
+  return try ClaudeSourceStoreTests.makeClaude(app, version: version)
 }
 
 /// `clone` adds the bundle id and `ClaudeMultiAccSlug` a real clone carries (the swap checks them).
@@ -88,6 +101,9 @@ func decisionLines(_ decisions: [UpdateDecision]) -> [String] {
 
 extension WatcherFixture {
   func marker(_ app: String) -> String { appMarker(app, root) }
+
+  /// The fixture's official app (`<root>/Applications/Claude.app`, version 2.0.0).
+  var officialApp: URL { root.appendingPathComponent("Applications/Claude.app", isDirectory: true) }
 
   var builds: [String] { log.all.filter { $0.hasPrefix("build") } }
 
@@ -148,6 +164,17 @@ struct GatedCloneBuilder: CloneBuilding {
   func build(spec: CloneSpec, source: URL, identity: SigningIdentity, intent: BuildIntent) async throws -> BuildReport {
     await gate.started.open()
     await gate.release.wait()
+    return try await inner.build(spec: spec, source: source, identity: identity, intent: intent)
+  }
+}
+
+/// Records the `source` of every build, then lets `inner` build.
+struct SourceRecordingBuilder: CloneBuilding {
+  let inner: any CloneBuilding
+  let sources: EventLog
+
+  func build(spec: CloneSpec, source: URL, identity: SigningIdentity, intent: BuildIntent) async throws -> BuildReport {
+    sources.add(source.path)
     return try await inner.build(spec: spec, source: source, identity: identity, intent: intent)
   }
 }

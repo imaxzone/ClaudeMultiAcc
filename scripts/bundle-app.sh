@@ -95,6 +95,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   </array>
   <key>CFBundleExecutable</key>
   <string>ClaudeMultiAcc</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
+  <key>CFBundleIconName</key>
+  <string>AppIcon</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -115,6 +119,13 @@ PLIST
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 
 # --- Resources (later tasks append resource copies here) ---
+# The app icon, compiled from assets/AppIcon.icon by scripts/make-app-icon.sh: Assets.car holds the Liquid Glass icon
+# (CFBundleIconName), AppIcon.icns the flat fallback (CFBundleIconFile).
+for file in Assets.car AppIcon.icns; do
+  [[ -s "$ROOT/assets/AppIcon/$file" ]] \
+    || { echo "missing assets/AppIcon/$file (run scripts/make-app-icon.sh)" >&2; exit 1; }
+  cp "$ROOT/assets/AppIcon/$file" "$APP/Contents/Resources/$file"
+done
 # The SwiftPM resource bundles with the English and Russian string tables. Every executable looks for them in
 # Contents/Resources (Support's ResourceBundles: Bundle.main.resourceURL for the app, ../Resources from
 # Contents/Helpers for cmacc). CloneLauncher shows no text and needs none.

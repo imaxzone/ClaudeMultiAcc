@@ -20,8 +20,9 @@ keeps these copies up to date when Claude updates.
   time you add an app and keeps it in a separate keychain file of its own: no Terminal, no keychain password. Because
   the certificate never changes, macOS keeps each clone’s permissions and keychain access between updates. The
   frameworks and helpers inside the app stay exactly as Anthropic ships them.
-- When Claude updates itself, ClaudeMultiAcc rebuilds the clones: a closed clone right away, an open one as soon as
-  you quit it, or when you click **Update**.
+- When a new Claude comes out, ClaudeMultiAcc downloads it from Anthropic by itself, so you never have to open the
+  official Claude for that, and rebuilds the clones: a closed clone right away, an open one as soon as you quit it, or
+  when you click **Update**. It also notices when the official Claude updates itself.
 
 ## Install
 
@@ -74,7 +75,13 @@ again.
 The menu shows your Claude apps in a grid: the official Claude first, then your clones, and **+ Add** last. Below it
 are **Open at Login** and **Quit**. You can open the apps from here or, as usual, from the Dock or Applications.
 
-- **Updates.** When Claude has updated and some clones have not yet, the menu bar icon gets a blue dot, those clones
+- **Check for Claude updates.** The ↻ button at the top right of the menu asks Anthropic for a newer Claude right now
+  (ClaudeMultiAcc also checks a minute after it starts and then every 6 hours). Next to it you see what is going on:
+  “Checking for Claude updates…”, “Downloading Claude 3.1700.0 — 42%”, “No Claude updates — you have 3.1623.3”. A new
+  version (about 270 MB) is downloaded, checked against Anthropic’s signature and kept in ClaudeMultiAcc’s data folder;
+  the official Claude is not changed and does not need to be opened. If something goes wrong after you click ↻, a
+  window says what happened.
+- **Updates.** When a newer Claude is there and some clones are behind, the menu bar icon gets a red dot, those clones
   get a blue arrow, and a bar on top says, for example, “New version 3.1700.0 — for Work and Lab” with
   an **Update** button (**Update 2** for two apps). Closed clones are updated right away. Open ones are quit after you
   confirm (“Restart and update?”, with **Don’t ask again**), updated and opened again; unsaved text in them may be
@@ -87,7 +94,7 @@ are **Open at Login** and **Quit**. You can open the apps from here or, as usual
   few seconds and reopens. You stay signed in: the sign-in lives in the clone’s profile folder, which never changes,
   just like its bundle id.
 - **Reinstall…** opens the same window; if you change nothing, its button reads **Reinstall**. It builds the clone
-  again from the current Claude: same name, label and sign-in, fresh icon. Use it for clones made by older versions of
+  again from the newest Claude on this Mac: same name, label and sign-in, fresh icon. Use it for clones made by older versions of
   ClaudeMultiAcc, whose icons may show a grey frame in the Dock. An open clone closes for a few seconds and reopens.
 - **Old icon in the Dock.** After **Edit…** or **Reinstall…** the Dock may keep showing the old icon: macOS caches the
   icons of pinned apps. So when it is done, the window offers **Refresh Dock**, which restarts the Dock: it takes a
@@ -107,7 +114,8 @@ are **Open at Login** and **Quit**. You can open the apps from here or, as usual
 
 ## Updating ClaudeMultiAcc
 
-Once a day the app asks GitHub whether a newer release exists; this is its only network request. When there is one,
+Once a day the app asks GitHub whether a newer release exists (see [Privacy and network](#privacy-and-network)). When
+there is one,
 the bottom of the menu says **ClaudeMultiAcc … is available** with a **Download** button that opens the
 release page. Download the new `.dmg`, quit ClaudeMultiAcc (menu → **Quit**), drag the new app onto Applications and
 choose **Replace**, then open it (allow it once more as in step 4). Your clones, their sign-ins and the signing
@@ -146,8 +154,9 @@ you can delete it in Keychain Access.
 - Never lets macOS offer the backup copies it keeps after updates (in **Open With** or for links): it unregisters them.
 - Never quits an app without asking first (unless you chose **Don’t ask again**). What you delete from the menu goes
   to the Trash; the only files it erases for good are its own working files: temporary build copies, the temporary
-  files of the signing setup, old backups in its data folder and old rotated logs.
-- Makes no network requests except the daily release check.
+  files of the signing setup, old backups in its data folder, Claude versions it downloaded once they are superseded,
+  and old rotated logs.
+- Makes no network requests except the daily release check and the Claude update check.
 
 ## For developers
 
@@ -175,6 +184,8 @@ scripts/release.sh              # dist/: ClaudeMultiAcc.app, .zip and .dmg with 
   permissions at every update).
 - Releases: pushing a tag `v<VERSION>` runs `.github/workflows/release.yml`, which tests, builds with
   `scripts/release.sh` and attaches the `.dmg`, `.zip` and checksums to a GitHub release.
+- App icon: the Liquid Glass source is `assets/AppIcon.icon` (open it in Icon Composer). After editing it, run
+  `scripts/make-app-icon.sh` (needs Xcode 26+) and commit `assets/AppIcon/`; building the app only copies those files.
 
 ### The `cmacc` helper
 
@@ -210,15 +221,28 @@ The command-line helper lives inside the app, `ClaudeMultiAcc.app/Contents/Helpe
 
 ### Privacy and network
 
-- The only network request is the release check: at most once a day, an anonymous `GET` of the latest release of
-  github.com/imaxzone/ClaudeMultiAcc from the GitHub API (`api.github.com`, `…/releases/latest`), without cookies or
-  credentials. The answer is cached in `~/Library/Application Support/ClaudeMultiAcc/release-check.json`.
-- To turn it off, start the app with `CMACC_NO_UPDATE_CHECK=1`, for example
-  `open --env CMACC_NO_UPDATE_CHECK=1 -a ClaudeMultiAcc`, or run `launchctl setenv CMACC_NO_UPDATE_CHECK 1` before it
-  starts (this lasts until you log out).
+ClaudeMultiAcc makes two kinds of network requests, both without cookies or credentials:
+
+- **Its own release check**: at most once a day, an anonymous `GET` of the latest release of
+  github.com/imaxzone/ClaudeMultiAcc from the GitHub API (`api.github.com`, `…/releases/latest`). The answer is cached
+  in `~/Library/Application Support/ClaudeMultiAcc/release-check.json`. To turn it off, start the app with
+  `CMACC_NO_UPDATE_CHECK=1`, for example `open --env CMACC_NO_UPDATE_CHECK=1 -a ClaudeMultiAcc`, or run
+  `launchctl setenv CMACC_NO_UPDATE_CHECK 1` before it starts (this lasts until you log out).
+- **The Claude update check**: a minute after start, every 6 hours and when you click ↻, a `GET` of Anthropic’s public
+  Claude Desktop update feed, the same one Claude itself uses:
+  `https://api.anthropic.com/api/desktop/darwin/arm64/squirrel/update?device_id=…&version=…&os_version=…`. It sends a
+  random id made once by ClaudeMultiAcc (kept in `claude-update.json`, not Claude’s own), the newest Claude version on
+  this Mac, the macOS version and `User-Agent: ClaudeMultiAcc/<version>`; nothing about your accounts. When the feed
+  offers a newer version, the full archive is downloaded only from `https://downloads.claude.ai/` and kept only if its
+  size and SHA-256 match the feed and the app inside is signed by Anthropic (Team ID `Q6L2SF6YDW`) with the expected
+  bundle id and version; an archive that fails these checks is not downloaded again automatically (↻ retries it). It
+  needs 2 GB free and keeps one version (about 630 MB) in `source/`; it is deleted once the
+  official Claude is as new. To turn off the automatic checks (↻ still works), use `CMACC_NO_CLAUDE_UPDATE_CHECK=1` the
+  same way as above.
 - Data: `~/Library/Application Support/ClaudeMultiAcc` holds `instances.json` (the list of apps), `settings.json`,
   `signing/` (the clones’ keychain file and its random password, readable only by you and excluded from Time Machine
-  backups), `backup/` and `staging/`. Each clone’s sign-in and settings are in
+  backups), `backup/`, `staging/`, and `source/` with the Claude version it downloaded (hidden from Spotlight and
+  from **Open With**). Each clone’s sign-in and settings are in
   `~/Library/Application Support/ClaudeProfiles/<name>`.
 - The signing tradeoff: the keychain password sits next to the keychain so the app can unlock it without asking you.
   Any program running as your user could therefore read it and sign an app with the clones’ certificate, which macOS

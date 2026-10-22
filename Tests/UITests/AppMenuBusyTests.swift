@@ -97,15 +97,15 @@ import Testing
     #expect(fixture.actions.calls == ["edit:mv2", "open:mv2"])
   }
 
-  /// A disabled button is not in the keyboard order.
+  /// A disabled button is not in the keyboard order: under ↻ comes the grid.
   @Test func keyboardSkipsTheBannerWhileUpdating() {
     let content = AppMenuContentTests.build()
     let layout = AppMenuLayout(content: content, hasRelease: false, busy: Self.updating)
-    #expect(layout.linear.first == .tile("main"))
+    #expect(layout.linear.prefix(2) == [.checkClaude, .tile("main")])
     #expect(!layout.linear.contains(.updateAll))
-    #expect(AppMenuNavigation.target(from: nil, .down, in: layout) == .tile("main"))
-    #expect(AppMenuNavigation.target(from: .tile("main"), .up, in: layout) == .quit)
-    #expect(AppMenuLayout(content: content, hasRelease: false).linear.first == .updateAll)
+    #expect(AppMenuNavigation.target(from: .checkClaude, .down, in: layout) == .tile("main"))
+    #expect(AppMenuNavigation.target(from: .tile("main"), .up, in: layout) == .checkClaude)
+    #expect(AppMenuLayout(content: content, hasRelease: false).linear.prefix(2) == [.checkClaude, .updateAll])
   }
 
   // MARK: Deleting
